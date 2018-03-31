@@ -6,12 +6,12 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/01 19:03:28 by jostraye          #+#    #+#             */
-/*   Updated: 2018/01/14 14:00:44 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/03/31 14:38:07 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "rtv1.h"
-
+#define DST_IMG 100
 // void	print_error(int err)
 // {
 // 	if (err == 1)
@@ -26,25 +26,31 @@
 
 double delta_calc(int a, int b, int c)
 {
-	return(b * b - 4 * a * c);
+	return((b * b) - (4.0 * a * c));
 }
 
-int object_cross(t_env *e, int i, int j)
+int object_cross(t_env *e, int y, int x)
 {
 	double delta;
+	double Vx;
+	double Vy;
+	double Vz;
 	double a;
 	double b;
 	double c;
-	a = (e->eye.x * e->eye.x) + (e->eye.y * e->eye.y + j * j - 2 * e->eye.y * j) +
-	(e->eye.z * e->eye.z + i * i - 2 * e->eye.y * i);
-	b = 2 * e->eye.x * (e->eye.x - e->objects[0].where.x) +
-	2 * (e->eye.y - j) * (e->eye.y - e->objects[0].where.y) +
-	2 * (e->eye.z - i) * (e->eye.z - e->objects[0].where.z);
-	c = e->eye.x * e->eye.x + e->objects[0].where.x * e->objects[0].where.x - 2 * e->objects[0].where.x * e->eye.x +
-	e->eye.y * e->eye.y + e->objects[0].where.y * e->objects[0].where.y - 2 * e->objects[0].where.y * e->eye.y +
-	e->eye.z * e->eye.z + e->objects[0].where.z * e->objects[0].where.z - 2 * e->objects[0].where.z * e->eye.z;
+	double dirx = (double)(e->eye.x - e->objects[0].where.x);
+	double diry = (double)(e->eye.y - e->objects[0].where.y);
+	double dirz = (double)(e->eye.z - e->objects[0].where.z);
+	Vx = (double)(DST_IMG);
+	Vy = (double)(SIZE / 2 - y);
+	Vz = (double)(SIZE / 2 - x);
+	a = (double)(Vx * Vx + Vy * Vy + Vz * Vz);
+	b = 2.0 * ((double)(dirx * Vx) + (double)(diry * Vy) + (double)(diry * Vz));
+	c = (double)(dirx * dirx
+	 + diry * diry +
+	 dirz * dirz - (double)(e->objects[0].what.length *  e->objects[0].what.length));
 	delta = delta_calc(a, b, c);
-	return (delta <= 0 ? 0 : 1);
+	return (delta < 0 ? 0 : 1);
 
 }
 
@@ -147,14 +153,14 @@ t_env	*create_environment(t_env *e, char *av)
 		return(NULL);
 	t_object *obj;
 	obj = (t_object *)malloc(sizeof(t_object));
-	obj[0].where.x = 50;
-	obj[0].where.y = 0;
+	obj[0].where.x = 0;
+	obj[0].where.y = 100;
 	obj[0].where.z = 0;
 	obj[0].what.shape = "sphere";
-	obj[0].what.length = 5;
-	obj[0].what.color = 0x98004d;
+	obj[0].what.length = 50;
+	obj[0].what.color = 0x4d0098;
 	e->objects = obj;
-	e->eye.x = 0;
+	e->eye.x = -100;
 	e->eye.y = 0;
 	e->eye.z = 0;
 	e->spot.where.x = 20;
