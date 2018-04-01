@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   fractol.h                                          :+:      :+:    :+:   */
+/*   rtv1.h                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/05 20:28:14 by jostraye          #+#    #+#             */
-/*   Updated: 2018/01/14 16:17:58 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/04/01 14:06:08 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ typedef struct		s_env
 	t_object	*objects;
 	t_light	spot;
 	t_where	eye;
-	int				max_it;
+	int				numberobjects;
 	void			*mlx;
 	void			*win;
 	void			*img;

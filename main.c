@@ -6,12 +6,13 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/01 19:03:28 by jostraye          #+#    #+#             */
-/*   Updated: 2018/03/31 14:38:07 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/04/01 14:06:37 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "rtv1.h"
 #define DST_IMG 100
+
 // void	print_error(int err)
 // {
 // 	if (err == 1)
@@ -24,12 +25,12 @@
 // 	return (e);
 // }
 
-double delta_calc(int a, int b, int c)
+double delta_calc(double a, double b, double c)
 {
 	return((b * b) - (4.0 * a * c));
 }
 
-int object_cross(t_env *e, int y, int x)
+int object_cross(t_env *e, int x, int y, int k)
 {
 	double delta;
 	double Vx;
@@ -38,17 +39,15 @@ int object_cross(t_env *e, int y, int x)
 	double a;
 	double b;
 	double c;
-	double dirx = (double)(e->eye.x - e->objects[0].where.x);
-	double diry = (double)(e->eye.y - e->objects[0].where.y);
-	double dirz = (double)(e->eye.z - e->objects[0].where.z);
-	Vx = (double)(DST_IMG);
-	Vy = (double)(SIZE / 2 - y);
-	Vz = (double)(SIZE / 2 - x);
+	double dirx = (double)(e->eye.x - e->objects[k].where.x);
+	double diry = (double)(e->eye.y - e->objects[k].where.y);
+	double dirz = (double)(e->eye.z - e->objects[k].where.z);
+	Vx = (double)(e->eye.x);
+	Vy = (double)(e->eye.y - SIZE / 2 + x);
+	Vz = (double)(e->eye.z - SIZE / 2 + y);
 	a = (double)(Vx * Vx + Vy * Vy + Vz * Vz);
-	b = 2.0 * ((double)(dirx * Vx) + (double)(diry * Vy) + (double)(diry * Vz));
-	c = (double)(dirx * dirx
-	 + diry * diry +
-	 dirz * dirz - (double)(e->objects[0].what.length *  e->objects[0].what.length));
+	b = (double)(2.0 * ((double)(dirx * Vx) + (double)(diry * Vy) + (double)(diry * Vz)));
+	c = (double)(dirx * dirx + diry * diry + dirz * dirz - (double)(e->objects[k].what.length *  e->objects[k].what.length));
 	delta = delta_calc(a, b, c);
 	return (delta < 0 ? 0 : 1);
 
@@ -59,25 +58,35 @@ void	*create_image(void *arg)
 	t_env *e;
 	int i;
 	int j;
+	int k;
 
 	e = (t_env *)arg;
 
-	i = 0;
-	j = (e->thread_int) * SIZE / TH_NB;
-	while (j < (((e->thread_int + 1) * SIZE) / TH_NB))
+
+	k = 0;
+
+	while (k < e->numberobjects)
 	{
-		while (i < SIZE)
-		{
-			// printf("int%d\n", e->objects[0].what.color);
-			if (object_cross(e, i, j))
-				e->data[j * SIZE + i] = e->objects[0].what.color;
-			else
-				e->data[j * SIZE + i] = 0xFFFFFF;
-			// printf("n %d\n", object_cross(e, i, j));
-			i++;
-		}
 		i = 0;
-		j++;
+		j = (e->thread_int) * SIZE / TH_NB;
+		printf("%d\n", k);
+		while (j < (((e->thread_int + 1) * SIZE) / TH_NB))
+		{
+			while (i < SIZE)
+			{
+				if (k == 0)
+					e->data[j * SIZE + i] = 0;
+				if (object_cross(e, i, j, k))
+					e->data[j * SIZE + i] = e->objects[k].what.color;
+				// printf("k %d n %d\n", k, object_cross(e, i, j, k));
+				if (e->data[j * SIZE + i] == 0)
+					e->data[j * SIZE + i] = 0xFFFFFF;
+				i++;
+			}
+			i = 0;
+			j++;
+		}
+		k++;
 	}
 	return (NULL);
 }
@@ -152,17 +161,24 @@ t_env	*create_environment(t_env *e, char *av)
 	if (av == NULL)
 		return(NULL);
 	t_object *obj;
-	obj = (t_object *)malloc(sizeof(t_object));
-	obj[0].where.x = 0;
-	obj[0].where.y = 100;
+	obj = (t_object *)malloc(2 * sizeof(t_object));
+	obj[0].where.x = -1000;
+	obj[0].where.y = -400;
 	obj[0].where.z = 0;
 	obj[0].what.shape = "sphere";
-	obj[0].what.length = 50;
+	obj[0].what.length = 500;
 	obj[0].what.color = 0x4d0098;
+	obj[1].where.x = -1000;
+	obj[1].where.y = -300;
+	obj[1].where.z = 00;
+	obj[1].what.shape = "sphere";
+	obj[1].what.length = 500;
+	obj[1].what.color = 0x984d00;
+	e->numberobjects = 2;
 	e->objects = obj;
-	e->eye.x = -100;
-	e->eye.y = 0;
-	e->eye.z = 0;
+	e->eye.x = SIZE;
+	e->eye.y = -400;
+	e->eye.z = 00;
 	e->spot.where.x = 20;
 	e->spot.where.y = 20;
 	e->spot.where.z = 20;
