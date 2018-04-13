@@ -26,6 +26,13 @@
 # define CLR 0x333d3f
 # define TH_NB 16
 
+typedef struct		s_vect
+{
+	double					x;
+	double					y;
+	double					z;
+}									t_vect;
+
 typedef struct		s_what
 {
 	char						*shape;

@@ -12,6 +12,12 @@
 
 #include "rtv1.h"
 #define DST_IMG 100
+// Idée:
+// On crée un vecteur qui va stocker la distance la plus petite de contact avec
+// une forme
+// le veceur est initialisé à +infini, pour pouvoir toujours trouver plus petit quand on compare avec une forme
+// a chaque calcul de point le plus proche, on y associe le numéro de la forme pour ensuite retrouver la couleur à afficher
+//
 
 // void	print_error(int err)
 // {
@@ -25,31 +31,84 @@
 // 	return (e);
 // }
 
-double delta_calc(double a, double b, double c)
+t_vect	bind_vect(t_vect a, t_vect b)
 {
-	return((b * b) - (4.0 * a * c));
+	t_vect c;
+	c.x = b.x - a.x;
+	c.y = b.y - a.y;
+	c.z = b.z - a.z;
+	return (c);
+}
+
+long vect_norm(t_vect a)
+{
+	return (sqrt(a.x * a.x + a.y * a.y + a.z * a.z));
+}
+
+long vect_scal(t_vect a, t_vect b)
+{
+	return (a.x * b.x + a.y * b.y + a.z * b.z);
+}
+
+long vect_angle(t_vect a, t_vect b)
+{
+	return (vect_scal(a, b) / (vect_norm(a) * vect_norm(b)));
+}
+
+double distance_calc(t_vect A)
+{
+	return((A.y * A.y) - (4.0 * A.x * A.z));
+}
+
+// cone(V, dir, e, k)
+// {
+//
+// }
+//
+// cylindre(V, dir, e, k)
+// {
+//
+// }
+//
+// cube(V, dir, e, k)
+// {
+//
+// }
+
+double sphere(t_vect V, t_vect dir, t_env *e, int k)
+{
+	t_vect A;
+	A.x = (double)(V.x * V.x + V.y * V.y + V.z * V.z);
+	A.y = (double)(2.0 * ((double)(dir.x * V.x) + (double)(dir.y * V.y) + (double)(dir.y * V.z)));
+	A.z = (double)(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z - (double)(e->objects[k].what.length *  e->objects[k].what.length));
+	return (distance_calc(A));
 }
 
 int object_cross(t_env *e, int x, int y, int k)
 {
-	double delta;
-	double Vx;
-	double Vy;
-	double Vz;
-	double a;
-	double b;
-	double c;
-	double dirx = (double)(e->eye.x - e->objects[k].where.x);
-	double diry = (double)(e->eye.y - e->objects[k].where.y);
-	double dirz = (double)(e->eye.z - e->objects[k].where.z);
-	Vx = (double)(e->eye.x);
-	Vy = (double)(e->eye.y - SIZE / 2 + x);
-	Vz = (double)(e->eye.z - SIZE / 2 + y);
-	a = (double)(Vx * Vx + Vy * Vy + Vz * Vz);
-	b = (double)(2.0 * ((double)(dirx * Vx) + (double)(diry * Vy) + (double)(diry * Vz)));
-	c = (double)(dirx * dirx + diry * diry + dirz * dirz - (double)(e->objects[k].what.length *  e->objects[k].what.length));
-	delta = delta_calc(a, b, c);
-	return (delta < 0 ? 0 : 1);
+	// cette fonction elle va dispatcher vers les différentes fonctions pour chaque forme
+	double distance;
+	t_vect V;
+	t_vect dir;
+	dir.x = (double)(e->eye.x - e->objects[k].where.x);
+	dir.y = (double)(e->eye.y - e->objects[k].where.y);
+	dir.z = (double)(e->eye.z - e->objects[k].where.z);
+	V.x = (double)(e->eye.x);
+	V.y = (double)(e->eye.y - SIZE / 2 + x);
+	V.z = (double)(e->eye.z - SIZE / 2 + y);
+	if (strcmp(e->objects[k].what.shape, "sphere") == 0)
+		distance = sphere(V, dir, e, k);
+	// if (strcmp(e->objects[k].what.shape, "cone") == 0)
+	// 	distance = cone(V, dir, e, k);
+	// if (strcmp(e->objects[k].what.shape, "cylindre") == 0)
+	// 	distance = cylindre(V, dir, e, k);
+	// if (strcmp(e->objects[k].what.shape, "cube") == 0)
+	// 	distance = cube(V, dir, e, k);
+	else
+		distance = 214647438;
+
+//ici je voudrais que la fonction retourne la vrai distance à l'objet
+	return (distance < 0 ? 0 : 1);
 
 }
 
@@ -163,21 +222,21 @@ t_env	*create_environment(t_env *e, char *av)
 	t_object *obj;
 	obj = (t_object *)malloc(2 * sizeof(t_object));
 	obj[0].where.x = -1000;
-	obj[0].where.y = -400;
+	obj[0].where.y = 0;
 	obj[0].where.z = 0;
 	obj[0].what.shape = "sphere";
-	obj[0].what.length = 500;
+	obj[0].what.length = 300;
 	obj[0].what.color = 0x4d0098;
 	obj[1].where.x = -1000;
 	obj[1].where.y = -300;
 	obj[1].where.z = 00;
 	obj[1].what.shape = "sphere";
-	obj[1].what.length = 500;
+	obj[1].what.length = 300;
 	obj[1].what.color = 0x984d00;
 	e->numberobjects = 2;
 	e->objects = obj;
 	e->eye.x = SIZE;
-	e->eye.y = -400;
+	e->eye.y = -300;
 	e->eye.z = 00;
 	e->spot.where.x = 20;
 	e->spot.where.y = 20;
