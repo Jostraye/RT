@@ -6,12 +6,12 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/01 19:03:28 by jostraye          #+#    #+#             */
-/*   Updated: 2018/04/01 14:06:37 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/04/16 19:10:36 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "rtv1.h"
-#define DST_IMG 100
+#define DST_IMG 1000
 // Idée:
 // On crée un vecteur qui va stocker la distance la plus petite de contact avec
 // une forme
@@ -31,7 +31,7 @@
 // 	return (e);
 // }
 
-t_vect	bind_vect(t_vect a, t_vect b)
+t_vect	vect_bind(t_vect a, t_vect b)
 {
 	t_vect c;
 	c.x = b.x - a.x;
@@ -55,7 +55,7 @@ long vect_angle(t_vect a, t_vect b)
 	return (vect_scal(a, b) / (vect_norm(a) * vect_norm(b)));
 }
 
-double distance_calc(t_vect A)
+double delta_calc(t_vect A)
 {
 	return((A.y * A.y) - (4.0 * A.x * A.z));
 }
@@ -77,25 +77,41 @@ double distance_calc(t_vect A)
 
 double sphere(t_vect V, t_vect dir, t_env *e, int k)
 {
+	double delta;
+	double discr1;
+	double discr2;
 	t_vect A;
+	discr1 = 2147483647;
+	discr2 = 2147483647;
 	A.x = (double)(V.x * V.x + V.y * V.y + V.z * V.z);
-	A.y = (double)(2.0 * ((double)(dir.x * V.x) + (double)(dir.y * V.y) + (double)(dir.y * V.z)));
+	A.y = (double)(2.0 * ((double)(dir.x * V.x) + (double)(dir.y * V.y) + (double)(dir.z * V.z)));
 	A.z = (double)(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z - (double)(e->objects[k].what.length *  e->objects[k].what.length));
-	return (distance_calc(A));
+	delta = delta_calc(A);
+	if (delta >= 0)
+	{
+		discr1 = (- A.y + sqrt(delta)) / (2 * A.x);
+		discr2 = (- A.y - sqrt(delta)) / (2 * A.x);
+	}
+	if (discr2 > 0)
+		discr2 = 2147483647;
+	if (discr1 > 0)
+		discr1 = 2147483647;
+
+	return (discr1 > discr2 ? discr1 : discr2);
 }
 
-int object_cross(t_env *e, int x, int y, int k)
+double object_cross(t_env *e, int i, int j, int k)
 {
 	// cette fonction elle va dispatcher vers les différentes fonctions pour chaque forme
 	double distance;
 	t_vect V;
 	t_vect dir;
-	dir.x = (double)(e->eye.x - e->objects[k].where.x);
-	dir.y = (double)(e->eye.y - e->objects[k].where.y);
-	dir.z = (double)(e->eye.z - e->objects[k].where.z);
-	V.x = (double)(e->eye.x);
-	V.y = (double)(e->eye.y - SIZE / 2 + x);
-	V.z = (double)(e->eye.z - SIZE / 2 + y);
+	dir.x = (double)(e->objects[k].where.x);
+	dir.y = (double)(e->objects[k].where.y);
+	dir.z = (double)(e->objects[k].where.z);
+	V.x = (double)(DST_IMG);
+	V.y = (double)(SIZE / 2 - i);
+	V.z = (double)(SIZE / 2 - j);
 	if (strcmp(e->objects[k].what.shape, "sphere") == 0)
 		distance = sphere(V, dir, e, k);
 	// if (strcmp(e->objects[k].what.shape, "cone") == 0)
@@ -105,11 +121,19 @@ int object_cross(t_env *e, int x, int y, int k)
 	// if (strcmp(e->objects[k].what.shape, "cube") == 0)
 	// 	distance = cube(V, dir, e, k);
 	else
-		distance = 214647438;
+		distance = 2147483647;
 
 //ici je voudrais que la fonction retourne la vrai distance à l'objet
-	return (distance < 0 ? 0 : 1);
+	return (distance);
 
+}
+
+t_vect vect_mult(double a, t_vect V)
+{
+	V.x = V.x * a;
+	V.y = V.y * a;
+	V.z = V.z * a;
+	return (V);
 }
 
 void	*create_image(void *arg)
@@ -118,28 +142,45 @@ void	*create_image(void *arg)
 	int i;
 	int j;
 	int k;
+	t_vect V;
+
 
 	e = (t_env *)arg;
+	double *pixel_distance;
+	int *pixel_object;
 
+	pixel_distance = (double *)malloc((sizeof(double) * SIZE * SIZE));
+	pixel_object = (int *)malloc((sizeof(int) * SIZE * SIZE));
 
 	k = 0;
-
 	while (k < e->numberobjects)
 	{
 		i = 0;
 		j = (e->thread_int) * SIZE / TH_NB;
-		printf("%d\n", k);
+
 		while (j < (((e->thread_int + 1) * SIZE) / TH_NB))
 		{
+
 			while (i < SIZE)
 			{
+				V.x = (double)(DST_IMG);
+				V.y = (double)(SIZE / 2 - i);
+				V.z = (double)(SIZE / 2 - j);
+				pixel_object[j * SIZE + i] = k;
+				pixel_distance[j * SIZE + i] = -1000 * object_cross(e, i, j, k);
+				if (pixel_distance[j * SIZE + i] < 0)
+					pixel_object[j * SIZE + i] = -1;
+
 				if (k == 0)
 					e->data[j * SIZE + i] = 0;
-				if (object_cross(e, i, j, k))
-					e->data[j * SIZE + i] = e->objects[k].what.color;
+				if (pixel_distance[j * SIZE + i] >= 0)
+					e->data[j * SIZE + i] = e->objects[k].what.color * vect_angle(vect_mult(object_cross(e, i, j, k), V), vect_bind(vect_mult(object_cross(e, i, j, k), V), e->objects[k].where));
 				// printf("k %d n %d\n", k, object_cross(e, i, j, k));
 				if (e->data[j * SIZE + i] == 0)
 					e->data[j * SIZE + i] = 0xFFFFFF;
+				if (pixel_distance[j * SIZE + i] >= 0)
+				printf("%ld\n", vect_scal(V, vect_bind(vect_mult(pixel_distance[j * SIZE + i], V), e->objects[k].where)));
+
 				i++;
 			}
 			i = 0;
@@ -147,6 +188,17 @@ void	*create_image(void *arg)
 		}
 		k++;
 	}
+	// printf("%d, %f\n", pixel_object[1000000], pixel_distance[1000000]);
+	// printf("%d, %f\n", pixel_object[100000], pixel_distance[100000]);
+	// printf("%d, %f\n", pixel_object[10000], pixel_distance[10000]);
+	// printf("%d, %f\n", pixel_object[1000], pixel_distance[1000]);
+	// printf("%d, %f\n", pixel_object[100], pixel_distance[100]);
+	// printf("%d, %f\n", pixel_object[10], pixel_distance[10]);
+	// printf("%d, %f\n", pixel_object[1], pixel_distance[1]);
+	// printf("%d, %f\n", pixel_object[0], pixel_distance[0]);
+	// printf("%d, %f\n", pixel_object[10004], pixel_distance[10004]);
+	// printf("%d, %f\n", pixel_object[2500], pixel_distance[2500]);
+
 	return (NULL);
 }
 
@@ -221,23 +273,23 @@ t_env	*create_environment(t_env *e, char *av)
 		return(NULL);
 	t_object *obj;
 	obj = (t_object *)malloc(2 * sizeof(t_object));
-	obj[0].where.x = -1000;
+	obj[0].where.x = 2000;
 	obj[0].where.y = 0;
 	obj[0].where.z = 0;
 	obj[0].what.shape = "sphere";
 	obj[0].what.length = 300;
 	obj[0].what.color = 0x4d0098;
-	obj[1].where.x = -1000;
-	obj[1].where.y = -300;
-	obj[1].where.z = 00;
+	obj[1].where.x = 2000;
+	obj[1].where.y = -700;
+	obj[1].where.z = 1000;
 	obj[1].what.shape = "sphere";
 	obj[1].what.length = 300;
 	obj[1].what.color = 0x984d00;
 	e->numberobjects = 2;
 	e->objects = obj;
-	e->eye.x = SIZE;
-	e->eye.y = -300;
-	e->eye.z = 00;
+	e->eye.x = 0;
+	e->eye.y = 0;
+	e->eye.z = 0;
 	e->spot.where.x = 20;
 	e->spot.where.y = 20;
 	e->spot.where.z = 20;

@@ -6,7 +6,7 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/05 20:28:14 by jostraye          #+#    #+#             */
-/*   Updated: 2018/04/01 14:06:08 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/04/16 18:53:19 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ typedef struct		s_where
 
 typedef struct		s_object
 {
-	t_where					where;
+	t_vect					where;
 	t_what					what;
 }									t_object;
 
