@@ -6,12 +6,17 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/01 19:03:28 by jostraye          #+#    #+#             */
-/*   Updated: 2018/04/16 19:10:36 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/04/20 17:55:58 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "rtv1.h"
 #define DST_IMG 1000
+
+void print_vect(t_vect v)
+{
+	printf("x: %f, y: %f, z:%f\n", v.x, v.y, v.z);
+}
 
 t_vect matrix_transform(t_vect a, t_matrix b)
 {
@@ -20,6 +25,14 @@ t_vect matrix_transform(t_vect a, t_matrix b)
 	c.y = a.x * b.ya + a.y * b.yb + a.z * b.yc;
 	c.z = a.x * b.za + a.y * b.zb + a.z * b.zc;
 	return (c);
+}
+
+t_vect vect_mult(double a, t_vect V)
+{
+	V.x = V.x * a;
+	V.y = V.y * a;
+	V.z = V.z * a;
+	return (V);
 }
 
 t_vect	vect_bind(t_vect a, t_vect b)
@@ -51,7 +64,7 @@ double delta_calc(t_vect A)
 	return((double)(A.y * A.y) - (double)(4.0 * A.x * A.z));
 }
 
-t_cross cone(t_vect V, t_vect dir)
+t_cross cone(t_vect V, t_vect dir, t_env *e, int k)
 {
 	double delta;
 	double discr1;
@@ -89,25 +102,26 @@ t_cross cone(t_vect V, t_vect dir)
 		discr1 = 2147483647;
 
 	cross_info.dist = discr1 > discr2 ? discr1 : discr2;
-	cross_info.x = e->objects[k].where.x;
-	cross_info.y = e->objects[k].where.y;
-	cross_info.z = e->objects[k].where.z;
+	cross_info.norm.x = e->objects[k].where.x;
+	cross_info.norm.y = e->objects[k].where.y;
+	cross_info.norm.z = e->objects[k].where.z;
 	return (cross_info);
 }
 
-t_cross cylindre(t_vect V,t_vect dir)
+t_cross cylindre(t_vect V,t_vect dir, t_env *e, int k)
 {
 	double delta;
 	double discr1;
 	double discr2;
 	t_vect A;
+	t_vect W;
 	t_matrix shear;
 	shear.xa = 1;
 	shear.xb = 0;
 	shear.xc = 0;
 	shear.ya = 0;
 	shear.yb = 1;
-	shear.yc = 0.5;
+	shear.yc = 0;
 	shear.za = 0;
 	shear.zb = 0;
 	shear.zc = 0;
@@ -115,11 +129,10 @@ t_cross cylindre(t_vect V,t_vect dir)
 	discr2 = 2147483647;
 	t_cross cross_info;
 
-	V = matrix_transform(V, shear);
+	W = matrix_transform(V, shear);
 	dir = matrix_transform(dir, shear);
-
-	A.x = (double)(V.x * V.x + V.y * V.y - V.z * V.z);
-	A.y = (double)(2.0 * ((double)(dir.x * V.x) + (double)(dir.y * V.y) - (double)(dir.z * V.z)));
+	A.x = (double)(W.x * W.x + W.y * W.y - W.z * W.z);
+	A.y = (double)(2.0 * ((double)(dir.x * W.x) + (double)(dir.y * W.y) - (double)(dir.z * W.z)));
 	A.z = (double)(dir.x * dir.x + dir.y * dir.y - dir.z * dir.z - 10000);
 	delta = delta_calc(A);
 	if (delta >= 0)
@@ -132,11 +145,21 @@ t_cross cylindre(t_vect V,t_vect dir)
 	if (discr1 > 0)
 		discr1 = 2147483647;
 	cross_info.dist = discr1 > discr2 ? discr1 : discr2;
+	cross_info.dist = -cross_info.dist;
   // ici, comme on a pas transformé le cylindre, on peut aplliquer pythagore avec un 'z' inchangé
-	cross_info.x = 
-	cross_info.y =
-	cross_info.z = e->objects[k].where.z;
-	return (cross_info);
+	cross_info.norm = matrix_transform(e->objects[k].where, shear);
+	// cross_info.norm.y = vect_mult(cross_info.dist, V).y;
+	// cross_info.norm.x = vect_mult(cross_info.dist, V).x;
+
+	cross_info.norm.z = vect_mult(cross_info.dist,  V).z;
+	// t_vect vecteur = vect_bind(e->objects[k].where, cross_info.norm);
+	cross_info.dist = -cross_info.dist;
+  //
+	// if (cross_info.dist != 2147483647 && cross_info.norm.z != 0)
+	// {
+// printf("points x: %f, y: %f, z:%f\nnorm x: %f, y: %f, z:%f\n", vect_mult(cross_info.dist,  V).x, vect_mult(cross_info.dist,  V).y, vect_mult(cross_info.dist, V).z, cross_info.norm.x,cross_info.norm.y, cross_info.norm.z);
+// }
+return (cross_info);
 
 }
 
@@ -146,12 +169,19 @@ t_cross plane(t_vect V, t_vect dir)
 	t_cross cross_info;
 
 	normal.x = 10;
-	normal.y = 0;
-	normal.z = 0;
-	cross_info.dist = vect_scal(dir, normal) / vect_scal(V, normal);
-	cross_info.x = normal.x;
-	cross_info.y = normal.y;
-	cross_info.z = normal.z;
+	normal.y = 10;
+	normal.z = 10;
+	cross_info.dist = - vect_scal(dir, normal) / vect_scal(V, normal);
+	cross_info.norm.x = normal.x + vect_mult(cross_info.dist, V).x;
+	cross_info.norm.y = normal.y + vect_mult(cross_info.dist, V).y;
+	cross_info.norm.z = normal.z + vect_mult(cross_info.dist, V).z;
+
+	// 	if (cross_info.dist != 2147483647)
+	// 	{
+	// 		printf("%f\n", cross_info.dist);
+	// // // printf("points x: %f, y: %f, z:%f\nnorm x: %f, y: %f, z:%f\n", vect_mult(cross_info.dist,  V).x,
+	// // //  vect_mult(cross_info.dist,  V).y, vect_mult(cross_info.dist, V).z, cross_info.norm.x,cross_info.norm.y, cross_info.norm.z);
+ // }
 	return (cross_info);
 
 }
@@ -180,9 +210,9 @@ t_cross sphere(t_vect V, t_vect dir, t_env *e, int k)
 	if (discr1 > 0)
 		discr1 = 2147483647;
 	cross_info.dist = discr1 > discr2 ? discr1 : discr2;
-	cross_info.x = e->objects[k].where.x;
-	cross_info.y = e->objects[k].where.y;
-	cross_info.z = e->objects[k].where.z;
+	cross_info.norm.x = e->objects[k].where.x;
+	cross_info.norm.y = e->objects[k].where.y;
+	cross_info.norm.z = e->objects[k].where.z;
 	return (cross_info);
 }
 
@@ -200,22 +230,14 @@ t_cross object_cross(t_env *e, int i, int j, int k)
 	if (strcmp(e->objects[k].what.shape, "sphere") == 0)
 		cross_info = sphere(V, dir, e, k);
 	if (strcmp(e->objects[k].what.shape, "cone") == 0)
-		cross_info = cone(V, dir);
+		cross_info = cone(V, dir, e, k);
 	if (strcmp(e->objects[k].what.shape, "cylindre") == 0)
-		cross_info = cylindre(V, dir);
+		cross_info = cylindre(V, dir, e, k);
 	if (strcmp(e->objects[k].what.shape, "plane") == 0)
 		cross_info = plane(V, dir);
 
 	return (cross_info);
 
-}
-
-t_vect vect_mult(double a, t_vect V)
-{
-	V.x = V.x * a;
-	V.y = V.y * a;
-	V.z = V.z * a;
-	return (V);
 }
 
 void	*create_image(void *arg)
@@ -247,30 +269,37 @@ void	*create_image(void *arg)
 
 			while (i < SIZE)
 			{
-				points[j * SIZE + i] = vect_bind(e->objects[k].where, vect_mult(-object_cross(e, i, j, k).dist, V));
 				V.x = (double)(DST_IMG);
 				V.y = (double)(SIZE / 2 - i);
 				V.z = (double)(SIZE / 2 - j);
+				points[j * SIZE + i] = vect_bind(object_cross(e, i, j, k).norm, vect_mult(-object_cross(e, i, j, k).dist, V));
 				pixel_object[j * SIZE + i] = k;
 				pixel_distance[j * SIZE + i] = -1000 * object_cross(e, i, j, k).dist;
 				if (pixel_distance[j * SIZE + i] < 0)
 					pixel_object[j * SIZE + i] = -1;
 
 				if (k == 0)
-					e->data[j * SIZE + i] = 0;
-				if (pixel_distance[j * SIZE + i] >= 0 && pixel_distance[j * SIZE + i] < 15000)
-					e->data[j * SIZE + i] = ( 0XFF) * -1 * vect_angle(vect_bind(points[j * SIZE + i], e->spot.where), points[j * SIZE + i]);
-				// printf("k %d n %d\n", k, object_cross(e, i, j, k));
-				if (e->data[j * SIZE + i] == 0)
-					e->data[j * SIZE + i] = 0x000000;
-				if (i == 350 && j == 500)
+					e->data[j * SIZE + i] = -2147483648;
+				if (pixel_distance[j * SIZE + i] >= 0 && pixel_distance[j * SIZE + i] < 3000 )
 				{
+					e->data[j * SIZE + i] = ( 0XFF) * vect_angle(vect_bind(vect_mult(-object_cross(e, i, j, k).dist, V), e->spot.where), points[j * SIZE + i]);
+					
+				}
+					// e->data[j * SIZE + i] = ( 0XFF) * vect_angle(vect_bind(points[j * SIZE + i], e->spot.where), points[j * SIZE + i]) / vect_angle(vect_bind(points[j * SIZE + i], e->eye.where), points[j * SIZE + i]);
+				// printf("k %d n %d\n", k, object_cross(e, i, j, k));
+				else if (e->data[j * SIZE + i] == -2147483648)
+					e->data[j * SIZE + i] = 0x51220;
+					// if(k == 0)
+					// printf("%f\n", vect_angle(vect_bind(vect_mult(-object_cross(e, i, j, k).dist, V), e->spot.where), points[j * SIZE + i]));
+
+				// if (i == 350 && j == 500)
+				// {
 					// printf("x: %f, y:  %f, z: %f\n length: %f\n normal x: %f, normal y:  %f, normal z: %f\n", vect_mult(object_cross(e, i, j, k), V).x,
 					// vect_mult(object_cross(e, i, j, k), V).y, vect_mult(object_cross(e, i, j, k), V).z,
 					// object_cross(e, i, j, k), vect_bind(e->objects[k].where, vect_mult(-object_cross(e, i, j, k), V)).x, vect_bind(e->objects[k].where, vect_mult(-object_cross(e, i, j, k), V)).y,
 					// vect_bind(e->objects[k].where, vect_mult(-object_cross(e, i, j, k), V)).z);
 					// printf("angle %f\n", vect_angle(vect_mult(-object_cross(e, i, j, k), V), vect_bind(e->objects[k].where, vect_mult(-object_cross(e, i, j, k), V))));
-				}
+				// }
 				i++;
 			}
 			i = 0;
@@ -356,24 +385,24 @@ t_env	*create_environment(t_env *e, char *av)
 	t_object *obj;
 	obj = (t_object *)malloc(2 * sizeof(t_object));
 	obj[0].where.x = 2000;
-	obj[0].where.y = 0;
+	obj[0].where.y = -200;
 	obj[0].where.z = 0;
 	obj[0].what.shape = "plane";
 	obj[0].what.length = 300;
 	obj[0].what.color = 0x4d0098;
 	obj[1].where.x = 2000;
-	obj[1].where.y = 0;
-	obj[1].where.z = 1000;
+	obj[1].where.y = 700;
+	obj[1].where.z = 0;
 	obj[1].what.shape = "sphere";
 	obj[1].what.length = 300;
 	obj[1].what.color = 0x984d00;
 	e->numberobjects = 2;
 	e->objects = obj;
-	e->eye.x = 0;
-	e->eye.y = 0;
-	e->eye.z = 0;
+	e->eye.where.x = 0;
+	e->eye.where.y = 0;
+	e->eye.where.z = 0;
 	e->spot.where.x = 2000;
-	e->spot.where.y = 20000;
+	e->spot.where.y = 0;
 	e->spot.where.z = 0;
 	return (e);
 

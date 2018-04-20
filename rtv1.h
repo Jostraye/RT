@@ -6,7 +6,7 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/05 20:28:14 by jostraye          #+#    #+#             */
-/*   Updated: 2018/04/16 18:53:19 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/04/20 15:01:24 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,9 +35,7 @@ typedef struct		s_vect
 
 typedef struct		s_cross
 {
-	double					x;
-	double					y;
-	double					z;
+	t_vect					norm;
 	double					dist;
 }									t_cross;
 
@@ -53,16 +51,6 @@ typedef struct		s_what
 	double					fluo;
 	double					trans;
 }									t_what;
-
-typedef struct		s_where
-{
-	double					x;
-	double					y;
-	double					z;
-	double					alpha;
-	double					beta;
-	double					gamma;
-}									t_where;
 
 typedef struct		s_matrix
 {
@@ -94,7 +82,7 @@ typedef struct		s_env
 {
 	t_object	*objects;
 	t_light	spot;
-	t_where	eye;
+	t_light	eye;
 	int				numberobjects;
 	void			*mlx;
 	void			*win;
