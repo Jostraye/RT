@@ -33,6 +33,14 @@ typedef struct		s_vect
 	double					z;
 }									t_vect;
 
+typedef struct		s_cross
+{
+	double					x;
+	double					y;
+	double					z;
+	double					dist;
+}									t_cross;
+
 typedef struct		s_what
 {
 	char						*shape;
@@ -56,6 +64,20 @@ typedef struct		s_where
 	double					gamma;
 }									t_where;
 
+typedef struct		s_matrix
+{
+	double					xa;
+	double					ya;
+	double					za;
+	double					xb;
+	double					yb;
+	double					zb;
+	double					xc;
+	double					yc;
+	double					zc;
+
+}									t_matrix;
+
 typedef struct		s_object
 {
 	t_vect					where;
@@ -64,7 +86,7 @@ typedef struct		s_object
 
 typedef struct		s_light
 {
-	t_where					where;
+	t_vect					where;
 	double					intensity;
 }									t_light;
 
