@@ -89,9 +89,9 @@ t_cross cone(t_vect V, t_vect dir)
 		discr1 = 2147483647;
 
 	cross_info.dist = discr1 > discr2 ? discr1 : discr2;
-	cross_info.x =
-	cross_info.y =
-	cross_info.z =
+	cross_info.x = e->objects[k].where.x;
+	cross_info.y = e->objects[k].where.y;
+	cross_info.z = e->objects[k].where.z;
 	return (cross_info);
 }
 
@@ -132,9 +132,10 @@ t_cross cylindre(t_vect V,t_vect dir)
 	if (discr1 > 0)
 		discr1 = 2147483647;
 	cross_info.dist = discr1 > discr2 ? discr1 : discr2;
-	cross_info.x =
+  // ici, comme on a pas transformé le cylindre, on peut aplliquer pythagore avec un 'z' inchangé
+	cross_info.x = 
 	cross_info.y =
-	cross_info.z =
+	cross_info.z = e->objects[k].where.z;
 	return (cross_info);
 
 }
