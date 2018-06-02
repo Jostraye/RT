@@ -12,232 +12,134 @@
 
 #include "rtv1.h"
 #define DST_IMG 1000
+#define ANGL_CVRT 0.0174532925
 
-void print_vect(t_vect v)
+t_vect compute_distance(t_vect V, t_vect dir, t_env *e, int k)
 {
-	printf("x: %f, y: %f, z:%f\n", v.x, v.y, v.z);
+	t_vect A;
+
+	if (strcmp(e->objects[k].what.shape, "cone") == 0)
+	{
+	A.x = (double)(V.x * V.x + V.y * V.y - V.z * V.z / e->objects[k].what.length);
+	A.y = (double)(2.0 * ((double)(dir.x * V.x) + (double)(dir.y * V.y)
+	- (double)(dir.z * V.z / e->objects[k].what.length)));
+	A.z = (double)(dir.x * dir.x + dir.y * dir.y - dir.z * dir.z
+		/ e->objects[k].what.length);
+	}
+	if (strcmp(e->objects[k].what.shape, "cylindre") == 0)
+	{
+	A.x = (double)(V.x * V.x + V.y * V.y );
+	A.y = (double)(2.0 * ((double)(dir.x * V.x) + (double)(dir.y * V.y)));
+	A.z = (double)(dir.x * dir.x + dir.y * dir.y - e->objects[k].what.length
+		* e->objects[k].what.length);
+	}
+	if (strcmp(e->objects[k].what.shape, "sphere") == 0)
+	{
+		A.x = (double)(V.x * V.x + V.y * V.y + V.z * V.z);
+		A.y = (double)(2.0 * ((double)(dir.x * V.x) + (double)(dir.y * V.y)
+		+ (double)(dir.z * V.z)));
+		A.z = (double)(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z -
+			 (double)(e->objects[k].what.length *  e->objects[k].what.length));
+	}
+	return (A);
 }
 
-t_vect matrix_transform(t_vect a, t_matrix b)
+t_vect compute_norm(t_vect V, t_env *e, int k, double distance)
 {
-	t_vect c;
-	c.x = a.x * b.xa + a.y * b.xb + a.z * b.xc;
-	c.y = a.x * b.ya + a.y * b.yb + a.z * b.yc;
-	c.z = a.x * b.za + a.y * b.zb + a.z * b.zc;
-	return (c);
+	t_vect N;
+	N = vect_mult(distance, V);
+	if (strcmp(e->objects[k].what.shape, "cone") == 0)
+		N.z = - vect_mult(distance, V).z / e->objects[k].what.length;
+	if (strcmp(e->objects[k].what.shape, "cylindre") == 0)
+		N.z = e->objects[k].where.z;
+	return (N);
 }
 
-t_vect vect_mult(double a, t_vect V)
+t_cross circular_crossing(t_vect V, t_vect dir, t_env *e, int k)
 {
-	V.x = V.x * a;
-	V.y = V.y * a;
-	V.z = V.z * a;
+	double delta;
+	double discr[2];
+	t_vect A;
+	t_cross cross_info;
+
+	discr[0] = -2147483647;
+	discr[1] = -2147483647;
+	A = compute_distance(V, dir, e, k);
+	delta = delta_calc(A);
+	if (delta >= 0)
+	{
+		discr[0] = (- A.y + sqrt(delta)) / (2 * A.x);
+		discr[1] = (- A.y - sqrt(delta)) / (2 * A.x);
+	}
+	cross_info.dist = discr[0] < discr[1] ? discr[0] : discr[1];
+	cross_info.norm = compute_norm(V, e, k, cross_info.dist);
+	return (cross_info);
+}
+
+t_cross plane_crossing(t_vect V, t_env *e, int k)
+{
+	t_cross cross_info;
+	t_matrix rotate;
+
+	rotate = rotate_matrix(e->objects[k].direct);
+	cross_info.norm.x = 0;
+	cross_info.norm.y = 0;
+	cross_info.norm.z = 100;
+	if (V.z != 0)
+		cross_info.dist = (- e->eye.where.z - e->objects[k].where.z) / V.z;
+	else
+		cross_info.dist = -247483647;
+	cross_info.norm = vect_mult(ft_sign(e->objects[k].where.z),cross_info.norm);
+	cross_info.norm = vect_bind(vect_mult(cross_info.dist, V), cross_info.norm);
+	return (cross_info);
+}
+
+t_vect init_v_vect( int i, int j)
+{
+	t_vect V;
+
+	V.x = (double)(DST_IMG);
+	V.y = (double)(SIZE / 2 - i);
+	V.z = (double)(SIZE / 2 - j);
 	return (V);
-}
-
-t_vect	vect_bind(t_vect a, t_vect b)
-{
-	t_vect c;
-	c.x = b.x - a.x;
-	c.y = b.y - a.y;
-	c.z = b.z - a.z;
-	return (c);
-}
-
-double vect_norm(t_vect a)
-{
-	return (sqrt((double)(a.x * a.x) + (double)(a.y * a.y) + (double)(a.z * a.z)));
-}
-
-double vect_scal(t_vect a, t_vect b)
-{
-	return ((double)(a.x * b.x) + (double)(a.y * b.y) + (double)(a.z * b.z));
-}
-
-double vect_angle(t_vect a, t_vect b)
-{
-	return ((double)vect_scal(a, b) / ((double)(vect_norm(a) * vect_norm(b))));
-}
-
-double delta_calc(t_vect A)
-{
-	return((double)(A.y * A.y) - (double)(4.0 * A.x * A.z));
-}
-
-t_cross cone(t_vect V, t_vect dir, t_env *e, int k)
-{
-	double delta;
-	double discr1;
-	double discr2;
-	t_vect A;
-	t_matrix shear;
-	shear.xa = 1;
-	shear.xb = 0;
-	shear.xc = 0;
-	shear.ya = 0;
-	shear.yb = 1;
-	shear.yc = 0.5;
-	shear.za = 0;
-	shear.zb = 0;
-	shear.zc = 1;
-	discr1 = 2147483647;
-	discr2 = 2147483647;
-	t_cross cross_info;
-
-	V = matrix_transform(V, shear);
-	dir = matrix_transform(dir, shear);
-
-	A.x = (double)(V.x * V.x + V.y * V.y - V.z * V.z);
-	A.y = (double)(2.0 * ((double)(dir.x * V.x) + (double)(dir.y * V.y) - (double)(dir.z * V.z)));
-	A.z = (double)(dir.x * dir.x + dir.y * dir.y - dir.z * dir.z);
-	delta = delta_calc(A);
-	if (delta >= 0)
-	{
-		discr1 = (- A.y + sqrt(delta)) / (2 * A.x);
-		discr2 = (- A.y - sqrt(delta)) / (2 * A.x);
-	}
-	if (discr2 > 0)
-		discr2 = 2147483647;
-	if (discr1 > 0)
-		discr1 = 2147483647;
-
-	cross_info.dist = discr1 > discr2 ? discr1 : discr2;
-	cross_info.norm.x = e->objects[k].where.x;
-	cross_info.norm.y = e->objects[k].where.y;
-	cross_info.norm.z = e->objects[k].where.z;
-	return (cross_info);
-}
-
-t_cross cylindre(t_vect V,t_vect dir, t_env *e, int k)
-{
-	double delta;
-	double discr1;
-	double discr2;
-	t_vect A;
-	t_vect W;
-	t_matrix shear;
-	shear.xa = 1;
-	shear.xb = 0;
-	shear.xc = 0;
-	shear.ya = 0;
-	shear.yb = 1;
-	shear.yc = 0;
-	shear.za = 0;
-	shear.zb = 0;
-	shear.zc = 0;
-	discr1 = 2147483647;
-	discr2 = 2147483647;
-	t_cross cross_info;
-
-	W = matrix_transform(V, shear);
-	dir = matrix_transform(dir, shear);
-	A.x = (double)(W.x * W.x + W.y * W.y - W.z * W.z);
-	A.y = (double)(2.0 * ((double)(dir.x * W.x) + (double)(dir.y * W.y) - (double)(dir.z * W.z)));
-	A.z = (double)(dir.x * dir.x + dir.y * dir.y - dir.z * dir.z - 10000);
-	delta = delta_calc(A);
-	if (delta >= 0)
-	{
-		discr1 = (- A.y + sqrt(delta)) / (2 * A.x);
-		discr2 = (- A.y - sqrt(delta)) / (2 * A.x);
-	}
-	if (discr2 > 0)
-		discr2 = 2147483647;
-	if (discr1 > 0)
-		discr1 = 2147483647;
-	cross_info.dist = discr1 > discr2 ? discr1 : discr2;
-	cross_info.dist = -cross_info.dist;
-  // ici, comme on a pas transformé le cylindre, on peut aplliquer pythagore avec un 'z' inchangé
-	cross_info.norm = matrix_transform(e->objects[k].where, shear);
-	// cross_info.norm.y = vect_mult(cross_info.dist, V).y;
-	// cross_info.norm.x = vect_mult(cross_info.dist, V).x;
-
-	cross_info.norm.z = vect_mult(cross_info.dist,  V).z;
-	// t_vect vecteur = vect_bind(e->objects[k].where, cross_info.norm);
-	cross_info.dist = -cross_info.dist;
-  //
-	// if (cross_info.dist != 2147483647 && cross_info.norm.z != 0)
-	// {
-// printf("points x: %f, y: %f, z:%f\nnorm x: %f, y: %f, z:%f\n", vect_mult(cross_info.dist,  V).x, vect_mult(cross_info.dist,  V).y, vect_mult(cross_info.dist, V).z, cross_info.norm.x,cross_info.norm.y, cross_info.norm.z);
-// }
-return (cross_info);
-
-}
-
-t_cross plane(t_vect V, t_vect dir)
-{
-	t_vect normal;
-	t_cross cross_info;
-
-	normal.x = 10;
-	normal.y = 10;
-	normal.z = 10;
-	cross_info.dist = - vect_scal(dir, normal) / vect_scal(V, normal);
-	cross_info.norm.x = normal.x + vect_mult(cross_info.dist, V).x;
-	cross_info.norm.y = normal.y + vect_mult(cross_info.dist, V).y;
-	cross_info.norm.z = normal.z + vect_mult(cross_info.dist, V).z;
-
-	// 	if (cross_info.dist != 2147483647)
-	// 	{
-	// 		printf("%f\n", cross_info.dist);
-	// // // printf("points x: %f, y: %f, z:%f\nnorm x: %f, y: %f, z:%f\n", vect_mult(cross_info.dist,  V).x,
-	// // //  vect_mult(cross_info.dist,  V).y, vect_mult(cross_info.dist, V).z, cross_info.norm.x,cross_info.norm.y, cross_info.norm.z);
- // }
-	return (cross_info);
-
-}
-
-t_cross sphere(t_vect V, t_vect dir, t_env *e, int k)
-{
-	double delta;
-	double discr1;
-	double discr2;
-	t_cross cross_info;
-	t_vect A;
-
-	discr1 = 2147483647;
-	discr2 = 2147483647;
-	A.x = (double)(V.x * V.x + V.y * V.y + V.z * V.z);
-	A.y = (double)(2.0 * ((double)(dir.x * V.x) + (double)(dir.y * V.y) + (double)(dir.z * V.z)));
-	A.z = (double)(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z - (double)(e->objects[k].what.length *  e->objects[k].what.length));
-	delta = delta_calc(A);
-	if (delta >= 0)
-	{
-		discr1 = (- A.y + sqrt(delta)) / (2 * A.x);
-		discr2 = (- A.y - sqrt(delta)) / (2 * A.x);
-	}
-	if (discr2 > 0)
-		discr2 = 2147483647;
-	if (discr1 > 0)
-		discr1 = 2147483647;
-	cross_info.dist = discr1 > discr2 ? discr1 : discr2;
-	cross_info.norm.x = e->objects[k].where.x;
-	cross_info.norm.y = e->objects[k].where.y;
-	cross_info.norm.z = e->objects[k].where.z;
-	return (cross_info);
 }
 
 t_cross object_cross(t_env *e, int i, int j, int k)
 {
-	t_cross cross_info;
+	t_cross crossing;
 	t_vect V;
 	t_vect dir;
-	dir.x = (double)(e->objects[k].where.x);
-	dir.y = (double)(e->objects[k].where.y);
-	dir.z = (double)(e->objects[k].where.z);
-	V.x = (double)(DST_IMG);
-	V.y = (double)(SIZE / 2 - i);
-	V.z = (double)(SIZE / 2 - j);
-	if (strcmp(e->objects[k].what.shape, "sphere") == 0)
-		cross_info = sphere(V, dir, e, k);
-	if (strcmp(e->objects[k].what.shape, "cone") == 0)
-		cross_info = cone(V, dir, e, k);
-	if (strcmp(e->objects[k].what.shape, "cylindre") == 0)
-		cross_info = cylindre(V, dir, e, k);
-	if (strcmp(e->objects[k].what.shape, "plane") == 0)
-		cross_info = plane(V, dir);
+	t_matrix rotate;
 
-	return (cross_info);
+	rotate = rotate_matrix(e->objects[k].direct);
+	V = matrix_mult(init_v_vect(i, j), rotate);
+	dir = matrix_mult(vect_bind(e->objects[k].where,e->eye.where), rotate);
+	rotate = inverse_matrix(e->objects[k].direct);
+	if (strcmp(e->objects[k].what.shape, "plane"))
+		crossing = circular_crossing(V, dir, e, k);
+	else
+		crossing = plane_crossing(V, e, k);
+	// if (strcmp(e->objects[k].what.shape, "plane") != 0)
+	// {
+		crossing.norm = vect_add(matrix_mult(crossing.norm, rotate), e->eye.where);
+		crossing.norm = vect_bind(e->objects[k].where, crossing.norm);
+	// }
+	return (crossing);
+}
 
+int multiply_color(int hex, double mult)
+{
+	int r;
+	int g;
+	int b;
+
+	if (mult < 0)
+		mult = 0;
+	b = (hex % 0X100);
+	g = (hex / 0X100) % 0X100;
+	r = (hex / (0X100 * 0X100)) % 0X100;
+		hex = (int)(mult * b) + (int)(mult * g) * 0X100 + (int)(mult * r) * 0X100 * 0X100 ;
+	return (hex);
 }
 
 void	*create_image(void *arg)
@@ -247,59 +149,49 @@ void	*create_image(void *arg)
 	int j;
 	int k;
 	t_vect V;
-	t_vect *points;
-
+	t_vect *normal_vectors;
+	double *pixel_distance;
+	t_vect *point_on_shape;
+	int *is_object;
 
 	e = (t_env *)arg;
-	double *pixel_distance;
-	int *pixel_object;
-
-	points = (t_vect *)malloc((sizeof(t_vect) * SIZE * SIZE));
+	normal_vectors = (t_vect *)malloc((sizeof(t_vect) * SIZE * SIZE));
+	point_on_shape = (t_vect *)malloc((sizeof(t_vect) * SIZE * SIZE));
 	pixel_distance = (double *)malloc((sizeof(double) * SIZE * SIZE));
-	pixel_object = (int *)malloc((sizeof(int) * SIZE * SIZE));
-
+	is_object = (int *)malloc((sizeof(int) * SIZE * SIZE));
 	k = 0;
-	while (k < e->numberobjects)
+	while (k < e->numberobjects - 2)
 	{
 		i = 0;
 		j = (e->thread_int) * SIZE / TH_NB;
-
 		while (j < (((e->thread_int + 1) * SIZE) / TH_NB))
 		{
-
 			while (i < SIZE)
 			{
-				V.x = (double)(DST_IMG);
-				V.y = (double)(SIZE / 2 - i);
-				V.z = (double)(SIZE / 2 - j);
-				points[j * SIZE + i] = vect_bind(object_cross(e, i, j, k).norm, vect_mult(-object_cross(e, i, j, k).dist, V));
-				pixel_object[j * SIZE + i] = k;
-				pixel_distance[j * SIZE + i] = -1000 * object_cross(e, i, j, k).dist;
+				V = init_v_vect(i, j);
+				if (k == 0)
+				{
+					pixel_distance[j * SIZE + i] = object_cross(e, i, j, k).dist;
+					is_object[j * SIZE + i] = k;
+					normal_vectors[j * SIZE + i] = object_cross(e, i, j, k).norm;
+				}
+				if ((object_cross(e, i, j, k).dist < pixel_distance[j * SIZE + i] && object_cross(e, i, j, k).dist > 0) || pixel_distance[j * SIZE + i] < 0)
+					{
+						pixel_distance[j * SIZE + i] = object_cross(e, i, j, k).dist;
+						is_object[j * SIZE + i] = k;
+						normal_vectors[j * SIZE + i] = object_cross(e, i, j, k).norm;
+					}
+				point_on_shape[j * SIZE + i] = vect_mult(pixel_distance[j * SIZE + i], V);
 				if (pixel_distance[j * SIZE + i] < 0)
-					pixel_object[j * SIZE + i] = -1;
-
+					is_object[j * SIZE + i] = -1;
 				if (k == 0)
 					e->data[j * SIZE + i] = -2147483648;
-				if (pixel_distance[j * SIZE + i] >= 0 && pixel_distance[j * SIZE + i] < 3000 )
-				{
-					e->data[j * SIZE + i] = ( 0XFF) * vect_angle(vect_bind(vect_mult(-object_cross(e, i, j, k).dist, V), e->spot.where), points[j * SIZE + i]);
-					
-				}
-					// e->data[j * SIZE + i] = ( 0XFF) * vect_angle(vect_bind(points[j * SIZE + i], e->spot.where), points[j * SIZE + i]) / vect_angle(vect_bind(points[j * SIZE + i], e->eye.where), points[j * SIZE + i]);
-				// printf("k %d n %d\n", k, object_cross(e, i, j, k));
+				if (pixel_distance[j * SIZE + i] >= 0 && pixel_distance[j * SIZE + i] < 2000 )
+					e->data[j * SIZE + i] = multiply_color(e->objects[is_object[j * SIZE + i]].what.color,
+						vect_angle(vect_bind(vect_add(point_on_shape[j * SIZE + i], e->eye.where), e->spot.where),
+						 normal_vectors[j * SIZE + i]));
 				else if (e->data[j * SIZE + i] == -2147483648)
 					e->data[j * SIZE + i] = 0x51220;
-					// if(k == 0)
-					// printf("%f\n", vect_angle(vect_bind(vect_mult(-object_cross(e, i, j, k).dist, V), e->spot.where), points[j * SIZE + i]));
-
-				// if (i == 350 && j == 500)
-				// {
-					// printf("x: %f, y:  %f, z: %f\n length: %f\n normal x: %f, normal y:  %f, normal z: %f\n", vect_mult(object_cross(e, i, j, k), V).x,
-					// vect_mult(object_cross(e, i, j, k), V).y, vect_mult(object_cross(e, i, j, k), V).z,
-					// object_cross(e, i, j, k), vect_bind(e->objects[k].where, vect_mult(-object_cross(e, i, j, k), V)).x, vect_bind(e->objects[k].where, vect_mult(-object_cross(e, i, j, k), V)).y,
-					// vect_bind(e->objects[k].where, vect_mult(-object_cross(e, i, j, k), V)).z);
-					// printf("angle %f\n", vect_angle(vect_mult(-object_cross(e, i, j, k), V), vect_bind(e->objects[k].where, vect_mult(-object_cross(e, i, j, k), V))));
-				// }
 				i++;
 			}
 			i = 0;
@@ -307,9 +199,9 @@ void	*create_image(void *arg)
 		}
 		k++;
 	}
-	free(points);
+	free(normal_vectors);
 	free(pixel_distance);
-	free(pixel_object);
+	free(is_object);
 	return (NULL);
 }
 
@@ -333,7 +225,6 @@ void	send_image_to_window(t_env *e)
 		e->data[i] = 0;
 	}
 	e->data = NULL;
-	// text_to_image(e);
 }
 
 
@@ -378,34 +269,35 @@ void	run_win(t_env *e)
 	mlx_loop(e->mlx);
 }
 
-t_env	*create_environment(t_env *e, char *av)
+t_env	*create_environment(t_env *e, char **av)
 {
-	if (av == NULL)
-		return(NULL);
-	t_object *obj;
-	obj = (t_object *)malloc(2 * sizeof(t_object));
-	obj[0].where.x = 2000;
-	obj[0].where.y = -200;
-	obj[0].where.z = 0;
-	obj[0].what.shape = "plane";
-	obj[0].what.length = 300;
-	obj[0].what.color = 0x4d0098;
-	obj[1].where.x = 2000;
-	obj[1].where.y = 700;
-	obj[1].where.z = 0;
-	obj[1].what.shape = "sphere";
-	obj[1].what.length = 300;
-	obj[1].what.color = 0x984d00;
-	e->numberobjects = 2;
-	e->objects = obj;
-	e->eye.where.x = 0;
-	e->eye.where.y = 0;
-	e->eye.where.z = 0;
-	e->spot.where.x = 2000;
-	e->spot.where.y = 0;
-	e->spot.where.z = 0;
-	return (e);
+	int i;
+	int j;
 
+	j = 0;
+	i = 0;
+	e->numberobjects = get_nb_line(av[1]);
+	t_object *obj;
+	e->objects = malloc(sizeof(t_object) * (e->numberobjects - 1));
+	if ((obj = get_scene(av)))
+	{
+		while (i < e->numberobjects)
+		{
+			if (ft_strcmp(obj[i].what.shape, "eye") && ft_strcmp(obj[i].what.shape, "spot"))
+			{
+				e->objects[j] = obj[i];
+				j++;
+			}
+			else if (ft_strcmp(obj[i].what.shape, "eye"))
+				e->spot = obj[i];
+			else if (ft_strcmp(obj[i].what.shape, "spot"))
+				e->eye = obj[i];
+			i++;
+		}
+	}
+	else
+		return (NULL);
+	return (e);
 }
 
 int		main(int ac, char **av)
@@ -414,10 +306,11 @@ int		main(int ac, char **av)
 
 	if (!(e = (t_env *)malloc(sizeof(t_env))))
 		return (0);
-	if (av == NULL || ac > 1)
-		printf("not good number of files\n");
-		// print_error(1);
-	create_environment(e, *av);
-	run_win(e);
+	if (av == NULL || ac > 2)
+		printf("Please pass a correct number of files\n");
+	if ((create_environment(e, av)))
+		run_win(e);
+	else
+		printf ("Please pass a valid configuration file as argument\n");
 	return (0);
 }

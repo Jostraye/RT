@@ -25,6 +25,8 @@ ALLO = *.o
 RM = rm -f
 
 SRCS = main.c \
+			 get_next_line.c \
+			 maths.c \
 
 all: $(LTA) $(LXA) $(NAME)
 

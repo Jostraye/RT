@@ -20,7 +20,8 @@
 # include <math.h>
 # include <pthread.h>
 # include "mlx.h"
-# define SIZE 1000
+# define SIZE 700
+# define BUFF_SIZE 100
 # define WIN_H 1000
 # define WIN_W 1000
 # define CLR 0x333d3f
@@ -43,13 +44,7 @@ typedef struct		s_what
 {
 	char						*shape;
 	double					length;
-	double					height;
-	double					width;
 	int							color;
-	double					reflect;
-	double					shine;
-	double					fluo;
-	double					trans;
 }									t_what;
 
 typedef struct		s_matrix
@@ -70,19 +65,22 @@ typedef struct		s_object
 {
 	t_vect					where;
 	t_what					what;
+	t_vect					direct;
 }									t_object;
 
-typedef struct		s_light
+typedef struct		s_scene
 {
-	t_vect					where;
-	double					intensity;
-}									t_light;
+	t_object	*objects;
+	t_object	spot;
+	t_object	eye;
+}									t_scene;
+
 
 typedef struct		s_env
 {
 	t_object	*objects;
-	t_light	spot;
-	t_light	eye;
+	t_object	spot;
+	t_object	eye;
 	int				numberobjects;
 	void			*mlx;
 	void			*win;
@@ -101,6 +99,23 @@ typedef struct		s_thread
 	t_env			*env;
 	int				id;
 }					t_thread;
+
+int				get_next_line(const int fd, char **line);
+t_object *get_scene(char **argv);
+int				get_nb_line(char *av);
+t_vect vect_mult(double a, t_vect V);
+t_matrix rotate_matrix(t_vect a);
+t_vect	vect_bind(t_vect a, t_vect b);
+double vect_norm(t_vect a);
+double vect_scal(t_vect a, t_vect b);
+double vect_angle(t_vect a, t_vect b);
+double delta_calc(t_vect A);
+t_vect matrix_mult(t_vect a, t_matrix b);
+t_vect	vect_add(t_vect a, t_vect b);
+t_matrix inverse_matrix(t_vect a);
+int ft_sign(double a);
+
+
 
 // int		expose_hook(t_env *e);
 // int		mouse_click_hook(int k, int x, int y, t_env *e);
