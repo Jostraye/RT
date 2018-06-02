@@ -6,7 +6,7 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/01 19:03:28 by jostraye          #+#    #+#             */
-/*   Updated: 2018/04/20 17:55:58 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/06/02 17:13:52 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ t_cross circular_crossing(t_vect V, t_vect dir, t_env *e, int k)
 	return (cross_info);
 }
 
-t_cross plane_crossing(t_vect V, t_env *e, int k)
+t_cross plane_crossing(t_vect V, t_vect dir, t_env *e, int k)
 {
 	t_cross cross_info;
 	t_matrix rotate;
@@ -86,11 +86,11 @@ t_cross plane_crossing(t_vect V, t_env *e, int k)
 	cross_info.norm.y = 0;
 	cross_info.norm.z = 100;
 	if (V.z != 0)
-		cross_info.dist = (- e->eye.where.z - e->objects[k].where.z) / V.z;
+		cross_info.dist = ( - dir.z) / V.z;
 	else
 		cross_info.dist = -247483647;
-	cross_info.norm = vect_mult(ft_sign(e->objects[k].where.z),cross_info.norm);
-	cross_info.norm = vect_bind(vect_mult(cross_info.dist, V), cross_info.norm);
+	// cross_info.norm = vect_mult(ft_sign(e->objects[k].where.z),cross_info.norm);
+	// cross_info.norm = vect_bind(vect_mult(cross_info.dist, V), cross_info.norm);
 	return (cross_info);
 }
 
@@ -104,25 +104,22 @@ t_vect init_v_vect( int i, int j)
 	return (V);
 }
 
-t_cross object_cross(t_env *e, int i, int j, int k)
+t_cross object_cross(t_env *e, t_vect V, t_vect dir, int k)
 {
 	t_cross crossing;
-	t_vect V;
-	t_vect dir;
 	t_matrix rotate;
-
 	rotate = rotate_matrix(e->objects[k].direct);
-	V = matrix_mult(init_v_vect(i, j), rotate);
-	dir = matrix_mult(vect_bind(e->objects[k].where,e->eye.where), rotate);
+
+	// dir = e->eye.where;
 	rotate = inverse_matrix(e->objects[k].direct);
 	if (strcmp(e->objects[k].what.shape, "plane"))
 		crossing = circular_crossing(V, dir, e, k);
 	else
-		crossing = plane_crossing(V, e, k);
-	// if (strcmp(e->objects[k].what.shape, "plane") != 0)
+		crossing = plane_crossing(V, dir, e, k);
+	if (strcmp(e->objects[k].what.shape, "plane") != 0)
 	// {
 		crossing.norm = vect_add(matrix_mult(crossing.norm, rotate), e->eye.where);
-		crossing.norm = vect_bind(e->objects[k].where, crossing.norm);
+	crossing.norm = vect_bind(e->objects[k].where, crossing.norm);
 	// }
 	return (crossing);
 }
@@ -142,6 +139,14 @@ int multiply_color(int hex, double mult)
 	return (hex);
 }
 
+double shadowing(double a)
+{
+	if (a > 0 && a < 1)
+		return ((double)0.1);
+	else
+	return((double)1);
+}
+
 void	*create_image(void *arg)
 {
 	t_env *e;
@@ -149,7 +154,12 @@ void	*create_image(void *arg)
 	int j;
 	int k;
 	t_vect V;
+	t_vect dir;
+	t_vect L;
+	t_vect Ldir;
+	t_matrix rotate;
 	t_vect *normal_vectors;
+	double *shadow;
 	double *pixel_distance;
 	t_vect *point_on_shape;
 	int *is_object;
@@ -158,6 +168,7 @@ void	*create_image(void *arg)
 	normal_vectors = (t_vect *)malloc((sizeof(t_vect) * SIZE * SIZE));
 	point_on_shape = (t_vect *)malloc((sizeof(t_vect) * SIZE * SIZE));
 	pixel_distance = (double *)malloc((sizeof(double) * SIZE * SIZE));
+	shadow = (double *)malloc((sizeof(double) * SIZE * SIZE));
 	is_object = (int *)malloc((sizeof(int) * SIZE * SIZE));
 	k = 0;
 	while (k < e->numberobjects - 2)
@@ -168,34 +179,83 @@ void	*create_image(void *arg)
 		{
 			while (i < SIZE)
 			{
-				V = init_v_vect(i, j);
+				rotate = rotate_matrix(e->objects[k].direct);
+				V = matrix_mult(init_v_vect(i, j), rotate);
+				dir = matrix_mult(vect_bind(e->objects[k].where,e->eye.where), rotate);
 				if (k == 0)
 				{
-					pixel_distance[j * SIZE + i] = object_cross(e, i, j, k).dist;
+					pixel_distance[j * SIZE + i] = object_cross(e, V, dir, k).dist;
 					is_object[j * SIZE + i] = k;
-					normal_vectors[j * SIZE + i] = object_cross(e, i, j, k).norm;
+					normal_vectors[j * SIZE + i] = object_cross(e, V, dir, k).norm;
 				}
-				if ((object_cross(e, i, j, k).dist < pixel_distance[j * SIZE + i] && object_cross(e, i, j, k).dist > 0) || pixel_distance[j * SIZE + i] < 0)
+				if ((object_cross(e, V, dir, k).dist < pixel_distance[j * SIZE + i] && object_cross(e, V, dir, k).dist > 0) || pixel_distance[j * SIZE + i] < 0)
 					{
-						pixel_distance[j * SIZE + i] = object_cross(e, i, j, k).dist;
+						pixel_distance[j * SIZE + i] = object_cross(e, V, dir, k).dist;
 						is_object[j * SIZE + i] = k;
-						normal_vectors[j * SIZE + i] = object_cross(e, i, j, k).norm;
+						normal_vectors[j * SIZE + i] = object_cross(e, V, dir, k).norm;
 					}
+        // on retourne sur le vecteur V non trqnsforme pour calcler la distance du point
+				V = init_v_vect(i, j);
 				point_on_shape[j * SIZE + i] = vect_mult(pixel_distance[j * SIZE + i], V);
-				if (pixel_distance[j * SIZE + i] < 0)
-					is_object[j * SIZE + i] = -1;
-				if (k == 0)
-					e->data[j * SIZE + i] = -2147483648;
-				if (pixel_distance[j * SIZE + i] >= 0 && pixel_distance[j * SIZE + i] < 2000 )
-					e->data[j * SIZE + i] = multiply_color(e->objects[is_object[j * SIZE + i]].what.color,
-						vect_angle(vect_bind(vect_add(point_on_shape[j * SIZE + i], e->eye.where), e->spot.where),
-						 normal_vectors[j * SIZE + i]));
-				else if (e->data[j * SIZE + i] == -2147483648)
-					e->data[j * SIZE + i] = 0x51220;
+				// a parti d'ici on peut refaire la procedure pour calculer les ombres
+
+
 				i++;
 			}
 			i = 0;
 			j++;
+		}
+		k++;
+	}
+	k = 0;
+	while (k < e->numberobjects - 2)
+	{
+		i = 0;
+		j = (e->thread_int) * SIZE / TH_NB;
+		while (j < (((e->thread_int + 1) * SIZE) / TH_NB))
+		{
+			while (i < SIZE)
+			{
+				rotate = rotate_matrix(e->objects[k].direct);
+				L = matrix_mult(vect_bind(e->spot.where, vect_add(point_on_shape[j * SIZE + i], e->eye.where)), rotate);
+				Ldir = matrix_mult(vect_bind(vect_add(point_on_shape[j * SIZE + i], e->eye.where), e->objects[k].where), rotate);
+				if (k == 0)
+					shadow[j * SIZE + i] = object_cross(e, L, Ldir, k).dist;
+				if ((object_cross(e, L, Ldir, k).dist < shadow[j * SIZE + i] && object_cross(e, L, Ldir, k).dist > 0) || pixel_distance[j * SIZE + i] < 0)
+					shadow[j * SIZE + i] = object_cross(e, L, Ldir, k).dist;
+					// printf("%f\n", shadow[j * SIZE + i]);
+				i++;
+			}
+		i = 0;
+		j++;
+	}
+	k++;
+	}
+	k = 0;
+	while (k < e->numberobjects - 2)
+	{
+		i = 0;
+		j = (e->thread_int) * SIZE / TH_NB;
+		while (j < (((e->thread_int + 1) * SIZE) / TH_NB))
+		{
+			while (i < SIZE)
+			{
+			L = vect_bind(e->spot.where, vect_add(point_on_shape[j * SIZE + i], e->eye.where));
+			if (pixel_distance[j * SIZE + i] < 0)
+				is_object[j * SIZE + i] = -1;
+			if (k == 0)
+				e->data[j * SIZE + i] = -2147483648;
+			if (pixel_distance[j * SIZE + i] >= 0 && pixel_distance[j * SIZE + i] < 2000 && (shadow[j * SIZE + i] > 1 || shadow[j * SIZE + i] < 0))
+				e->data[j * SIZE + i] = multiply_color(e->objects[is_object[j * SIZE + i]].what.color,
+					vect_angle(vect_mult((double)-1, L), normal_vectors[j * SIZE + i]));
+			else if (shadow[j * SIZE + i] < 1 && shadow[j * SIZE + i] > 0)
+				e->data[j * SIZE + i] = 0;
+			else if (e->data[j * SIZE + i] == -2147483648)
+				e->data[j * SIZE + i] = 0x51220;
+			i++;
+		}
+		i = 0;
+		j++;
 		}
 		k++;
 	}

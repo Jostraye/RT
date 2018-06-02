@@ -6,7 +6,7 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/05 20:28:14 by jostraye          #+#    #+#             */
-/*   Updated: 2018/04/20 15:01:24 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/06/02 12:25:20 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 # include <math.h>
 # include <pthread.h>
 # include "mlx.h"
-# define SIZE 700
+# define SIZE 1200
 # define BUFF_SIZE 100
 # define WIN_H 1000
 # define WIN_W 1000
