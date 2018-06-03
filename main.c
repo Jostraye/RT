@@ -6,7 +6,7 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/01 19:03:28 by jostraye          #+#    #+#             */
-/*   Updated: 2018/06/02 17:13:52 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/06/03 17:13:07 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,7 +142,7 @@ int multiply_color(int hex, double mult)
 double shadowing(double a)
 {
 	if (a > 0 && a < 1)
-		return ((double)0.1);
+		return ((double)0.35);
 	else
 	return((double)1);
 }
@@ -221,15 +221,15 @@ void	*create_image(void *arg)
 				Ldir = matrix_mult(vect_bind(vect_add(point_on_shape[j * SIZE + i], e->eye.where), e->objects[k].where), rotate);
 				if (k == 0)
 					shadow[j * SIZE + i] = object_cross(e, L, Ldir, k).dist;
-				if ((object_cross(e, L, Ldir, k).dist < shadow[j * SIZE + i] && object_cross(e, L, Ldir, k).dist > 0) || pixel_distance[j * SIZE + i] < 0)
+				else if ((shadow[j * SIZE + i] >= 1  || shadow[j * SIZE + i] <= 0))
 					shadow[j * SIZE + i] = object_cross(e, L, Ldir, k).dist;
 					// printf("%f\n", shadow[j * SIZE + i]);
 				i++;
 			}
-		i = 0;
-		j++;
-	}
-	k++;
+			i = 0;
+			j++;
+		}
+		k++;
 	}
 	k = 0;
 	while (k < e->numberobjects - 2)
@@ -245,11 +245,11 @@ void	*create_image(void *arg)
 				is_object[j * SIZE + i] = -1;
 			if (k == 0)
 				e->data[j * SIZE + i] = -2147483648;
-			if (pixel_distance[j * SIZE + i] >= 0 && pixel_distance[j * SIZE + i] < 2000 && (shadow[j * SIZE + i] > 1 || shadow[j * SIZE + i] < 0))
+			if (pixel_distance[j * SIZE + i] >= 0 && pixel_distance[j * SIZE + i] < 2000 )
 				e->data[j * SIZE + i] = multiply_color(e->objects[is_object[j * SIZE + i]].what.color,
-					vect_angle(vect_mult((double)-1, L), normal_vectors[j * SIZE + i]));
-			else if (shadow[j * SIZE + i] < 1 && shadow[j * SIZE + i] > 0)
-				e->data[j * SIZE + i] = 0;
+					shadowing(shadow[j * SIZE + i]) * vect_angle(vect_mult((double)-1, L), normal_vectors[j * SIZE + i]));
+			// else if (shadow[j * SIZE + i] < 1 && shadow[j * SIZE + i] > 0)
+			// 	e->data[j * SIZE + i] = 0;
 			else if (e->data[j * SIZE + i] == -2147483648)
 				e->data[j * SIZE + i] = 0x51220;
 			i++;
