@@ -108,7 +108,6 @@ t_cross object_cross(t_env *e, t_vect V, t_vect dir, int k)
 {
 	t_cross crossing;
 	t_matrix rotate;
-	rotate = rotate_matrix(e->objects[k].direct);
 
 	rotate = inverse_matrix(e->objects[k].direct);
 	if (strcmp(e->objects[k].what.shape, "plane"))
@@ -116,7 +115,13 @@ t_cross object_cross(t_env *e, t_vect V, t_vect dir, int k)
 	else
 		crossing = plane_crossing(V, dir, e, k);
 	crossing.norm = vect_add(matrix_mult(crossing.norm, rotate), e->eye.where);
+	rotate = rotate_matrix(e->objects[k].direct);
+
+	// if (strcmp(e->objects[k].what.shape, "plane") == 0)
+	// crossing.norm = vect_bind(matrix_mult(e->objects[k].where, rotate), crossing.norm);
+	// else
 	crossing.norm = vect_bind(e->objects[k].where, crossing.norm);
+
 	return (crossing);
 }
 
