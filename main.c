@@ -110,19 +110,13 @@ t_cross object_cross(t_env *e, t_vect V, t_vect dir, int k)
 	t_matrix rotate;
 	rotate = rotate_matrix(e->objects[k].direct);
 
-	// dir = e->eye.where;
 	rotate = inverse_matrix(e->objects[k].direct);
 	if (strcmp(e->objects[k].what.shape, "plane"))
 		crossing = circular_crossing(V, dir, e, k);
 	else
 		crossing = plane_crossing(V, dir, e, k);
-	// if (strcmp(e->objects[k].what.shape, "plane") != 0)
-	// // {
 	crossing.norm = vect_add(matrix_mult(crossing.norm, rotate), e->eye.where);
-	if (strcmp(e->objects[k].what.shape, "plane") == 0)
-		crossing.norm = vect_bind(e->eye.where, crossing.norm);
 	crossing.norm = vect_bind(e->objects[k].where, crossing.norm);
-	// }
 	return (crossing);
 }
 
@@ -143,7 +137,7 @@ int multiply_color(int hex, double mult)
 
 double shadowing(double a)
 {
-	if (a > (double)0 && a < (double)1)
+	if (a > 0.000001 && a < 0.99999)
 		return ((double)0.35);
 	else
 	return((double)1);
