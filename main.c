@@ -116,9 +116,11 @@ t_cross object_cross(t_env *e, t_vect V, t_vect dir, int k)
 		crossing = circular_crossing(V, dir, e, k);
 	else
 		crossing = plane_crossing(V, dir, e, k);
-	if (strcmp(e->objects[k].what.shape, "plane") != 0)
-	// {
-		crossing.norm = vect_add(matrix_mult(crossing.norm, rotate), e->eye.where);
+	// if (strcmp(e->objects[k].what.shape, "plane") != 0)
+	// // {
+	crossing.norm = vect_add(matrix_mult(crossing.norm, rotate), e->eye.where);
+	if (strcmp(e->objects[k].what.shape, "plane") == 0)
+		crossing.norm = vect_bind(e->eye.where, crossing.norm);
 	crossing.norm = vect_bind(e->objects[k].where, crossing.norm);
 	// }
 	return (crossing);
@@ -141,7 +143,7 @@ int multiply_color(int hex, double mult)
 
 double shadowing(double a)
 {
-	if (a > 0 && a < 1)
+	if (a > (double)0 && a < (double)1)
 		return ((double)0.35);
 	else
 	return((double)1);
@@ -219,11 +221,19 @@ void	*create_image(void *arg)
 				rotate = rotate_matrix(e->objects[k].direct);
 				L = matrix_mult(vect_bind(e->spot.where, vect_add(point_on_shape[j * SIZE + i], e->eye.where)), rotate);
 				Ldir = matrix_mult(vect_bind(vect_add(point_on_shape[j * SIZE + i], e->eye.where), e->objects[k].where), rotate);
+				if (point_on_shape[j * SIZE + i].x != vect_mult(object_cross(e, V, dir, k).dist, V).x
+				|| point_on_shape[j * SIZE + i].y != vect_mult(object_cross(e, V, dir, k).dist, V).y
+				|| point_on_shape[j * SIZE + i].z != vect_mult(object_cross(e, V, dir, k).dist, V).z)
+				{
 				if (k == 0)
 					shadow[j * SIZE + i] = object_cross(e, L, Ldir, k).dist;
-				else if ((shadow[j * SIZE + i] >= 1  || shadow[j * SIZE + i] <= 0))
+				else if ((shadow[j * SIZE + i] > 0.99999  || shadow[j * SIZE + i] < 0.00001))
 					shadow[j * SIZE + i] = object_cross(e, L, Ldir, k).dist;
 					// printf("%f\n", shadow[j * SIZE + i]);
+				}
+				else
+				shadow[j * SIZE + i] = -1;
+
 				i++;
 			}
 			i = 0;

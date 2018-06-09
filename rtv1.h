@@ -20,7 +20,7 @@
 # include <math.h>
 # include <pthread.h>
 # include "mlx.h"
-# define SIZE 1200
+# define SIZE 900
 # define BUFF_SIZE 100
 # define WIN_H 1000
 # define WIN_W 1000
