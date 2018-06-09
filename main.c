@@ -6,7 +6,7 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/01 19:03:28 by jostraye          #+#    #+#             */
-/*   Updated: 2018/06/03 17:13:07 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/06/09 14:55:57 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,8 +89,6 @@ t_cross plane_crossing(t_vect V, t_vect dir, t_env *e, int k)
 		cross_info.dist = ( - dir.z) / V.z;
 	else
 		cross_info.dist = -247483647;
-	// cross_info.norm = vect_mult(ft_sign(e->objects[k].where.z),cross_info.norm);
-	// cross_info.norm = vect_bind(vect_mult(cross_info.dist, V), cross_info.norm);
 	return (cross_info);
 }
 
@@ -116,10 +114,6 @@ t_cross object_cross(t_env *e, t_vect V, t_vect dir, int k)
 		crossing = plane_crossing(V, dir, e, k);
 	crossing.norm = vect_add(matrix_mult(crossing.norm, rotate), e->eye.where);
 	rotate = rotate_matrix(e->objects[k].direct);
-
-	// if (strcmp(e->objects[k].what.shape, "plane") == 0)
-	// crossing.norm = vect_bind(matrix_mult(e->objects[k].where, rotate), crossing.norm);
-	// else
 	crossing.norm = vect_bind(e->objects[k].where, crossing.norm);
 
 	return (crossing);
@@ -195,12 +189,8 @@ void	*create_image(void *arg)
 						is_object[j * SIZE + i] = k;
 						normal_vectors[j * SIZE + i] = object_cross(e, V, dir, k).norm;
 					}
-        // on retourne sur le vecteur V non trqnsforme pour calcler la distance du point
 				V = init_v_vect(i, j);
 				point_on_shape[j * SIZE + i] = vect_mult(pixel_distance[j * SIZE + i], V);
-				// a parti d'ici on peut refaire la procedure pour calculer les ombres
-
-
 				i++;
 			}
 			i = 0;
@@ -228,7 +218,6 @@ void	*create_image(void *arg)
 					shadow[j * SIZE + i] = object_cross(e, L, Ldir, k).dist;
 				else if ((shadow[j * SIZE + i] > 0.99999  || shadow[j * SIZE + i] < 0.00001))
 					shadow[j * SIZE + i] = object_cross(e, L, Ldir, k).dist;
-					// printf("%f\n", shadow[j * SIZE + i]);
 				}
 				else
 				shadow[j * SIZE + i] = -1;
@@ -257,8 +246,6 @@ void	*create_image(void *arg)
 			if (pixel_distance[j * SIZE + i] >= 0 && pixel_distance[j * SIZE + i] < 2000 )
 				e->data[j * SIZE + i] = multiply_color(e->objects[is_object[j * SIZE + i]].what.color,
 					shadowing(shadow[j * SIZE + i]) * vect_angle(vect_mult((double)-1, L), normal_vectors[j * SIZE + i]));
-			// else if (shadow[j * SIZE + i] < 1 && shadow[j * SIZE + i] > 0)
-			// 	e->data[j * SIZE + i] = 0;
 			else if (e->data[j * SIZE + i] == -2147483648)
 				e->data[j * SIZE + i] = 0x51220;
 			i++;
@@ -321,7 +308,6 @@ int		expose_hook(t_env *e)
 
 t_env	*initialize_win(t_env *e)
 {
-	// e = reset_environment(e);
 	e->mlx = mlx_init();
 	e->win = mlx_new_window(e->mlx, SIZE, SIZE, "MY GRAPH");
 	e->img = mlx_new_image(e->mlx, SIZE, SIZE);
@@ -331,10 +317,7 @@ t_env	*initialize_win(t_env *e)
 void	run_win(t_env *e)
 {
 	e = initialize_win(e);
-	// mlx_key_hook(e->win, keyboard_hooks, e);
 	mlx_expose_hook(e->win, expose_hook, e);
-	// mlx_mouse_hook(e->win, mouse_click_hook, e);
-	// mlx_hook(e->win, 6, 0, mouse_pos, e);
 	mlx_loop(e->mlx);
 }
 

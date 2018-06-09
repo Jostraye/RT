@@ -12,11 +12,11 @@ plane   0xFFFFFF   0       0      500       0       90   0     0
 plane   0xFFFFFF   0       0      -500       -0       90   0     0
 plane   0xFFFFFF   0       0      0       300       0   0     0
 sphere   0xFF00FF   30       1200   -0   0     0   0   0
-plane   0xFFFFFF   0       1250      -00       500       90   0     90
+plane   0xFFFFFF   0       1250      -00       1250       45   0     45
 #
 #
 # SPOT   CX     CY     CZ
- spot  500    0       200
+ spot  700    0       0
 #
 # EYE   CX     CY     CZ    DX    DY   DZ
- eye     -00     -00      0     0     0   0
+ eye     -1000     -00      0     0     0   0
