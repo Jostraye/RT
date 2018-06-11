@@ -6,7 +6,7 @@
 /*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/01 19:03:28 by jostraye          #+#    #+#             */
-/*   Updated: 2018/06/09 14:55:57 by jostraye         ###   ########.fr       */
+/*   Updated: 2018/06/11 16:17:41 by jostraye         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,13 +82,11 @@ t_cross plane_crossing(t_vect V, t_vect dir, t_env *e, int k)
 	t_matrix rotate;
 
 	rotate = rotate_matrix(e->objects[k].direct);
-	cross_info.norm.x = 0;
-	cross_info.norm.y = 0;
-	cross_info.norm.z = 100;
 	if (V.z != 0)
 		cross_info.dist = ( - dir.z) / V.z;
 	else
 		cross_info.dist = -247483647;
+	cross_info.norm = vect_mult(cross_info.dist, V);
 	return (cross_info);
 }
 
@@ -106,15 +104,32 @@ t_cross object_cross(t_env *e, t_vect V, t_vect dir, int k)
 {
 	t_cross crossing;
 	t_matrix rotate;
+	t_vect n;
 
+	n.x = 0;
+	n.y = 0;
+	n.z = 100;
 	rotate = inverse_matrix(e->objects[k].direct);
 	if (strcmp(e->objects[k].what.shape, "plane"))
 		crossing = circular_crossing(V, dir, e, k);
 	else
 		crossing = plane_crossing(V, dir, e, k);
-	crossing.norm = vect_add(matrix_mult(crossing.norm, rotate), e->eye.where);
-	rotate = rotate_matrix(e->objects[k].direct);
-	crossing.norm = vect_bind(e->objects[k].where, crossing.norm);
+	if (strcmp(e->objects[k].what.shape, "plane"))
+	{
+		crossing.norm = vect_add(matrix_mult(crossing.norm, rotate), e->eye.where);
+		crossing.norm = vect_bind(e->objects[k].where, crossing.norm);
+	}
+	else
+	{
+		rotate = rotate_matrix(e->objects[k].direct);
+		crossing.norm = matrix_mult(n, rotate);
+		// rotate = inverse_matrix(e->objects[k].direct);
+		// crossing.norm = matrix_mult(crossing.norm, rotate);
+		// crossing.norm = matrix_mult(crossing.norm, rotate);
+	}
+// 	crossing.norm = vect_add(matrix_mult(crossing.norm, rotate), e->eye.where);
+// rotate = rotate_matrix(e->objects[k].direct);
+// crossing.norm = vect_bind(e->objects[k].where, crossing.norm);
 
 	return (crossing);
 }
@@ -210,17 +225,11 @@ void	*create_image(void *arg)
 				rotate = rotate_matrix(e->objects[k].direct);
 				L = matrix_mult(vect_bind(e->spot.where, vect_add(point_on_shape[j * SIZE + i], e->eye.where)), rotate);
 				Ldir = matrix_mult(vect_bind(vect_add(point_on_shape[j * SIZE + i], e->eye.where), e->objects[k].where), rotate);
-				if (point_on_shape[j * SIZE + i].x != vect_mult(object_cross(e, V, dir, k).dist, V).x
-				|| point_on_shape[j * SIZE + i].y != vect_mult(object_cross(e, V, dir, k).dist, V).y
-				|| point_on_shape[j * SIZE + i].z != vect_mult(object_cross(e, V, dir, k).dist, V).z)
-				{
+
 				if (k == 0)
 					shadow[j * SIZE + i] = object_cross(e, L, Ldir, k).dist;
 				else if ((shadow[j * SIZE + i] > 0.99999  || shadow[j * SIZE + i] < 0.00001))
 					shadow[j * SIZE + i] = object_cross(e, L, Ldir, k).dist;
-				}
-				else
-				shadow[j * SIZE + i] = -1;
 
 				i++;
 			}
