@@ -1,0 +1,9 @@
+#NAME		X		Y		Z		RX	RY	RZ	COLOR		SIZE		SPEC	DIFF	AMB		HEIGHT
+plane		0		0		-600	0 	0 	1	0xFF00FF	200			0.1		0.9		0.1		0
+#light		1200	300		1100	0 	0 	0	0xFFFFFF
+light		800	600		1000	0 	0 	0	0xFFFFFF
+#light		800	800		800		0 	0 	0	0xFFFFFF
+#sphere		1000	00		200		0  	0	0	0xFF00FF	400			1		1		0.2		0
+eye			-2000	0		0		0	0	0
+#disk		1000	00		100		0	0	1	0x0000FF	600			1		1		0.2		0
+cone		1000	400		100		0	0	-1	0x0000FF	25			1		1		0.2		1500

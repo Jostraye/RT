@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_memchr.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tmervin <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/09/27 15:37:12 by jostraye          #+#    #+#             */
-/*   Updated: 2017/09/30 22:28:47 by jostraye         ###   ########.fr       */
+/*   Created: 2018/04/03 14:07:50 by tmervin           #+#    #+#             */
+/*   Updated: 2018/04/03 14:23:59 by tmervin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,17 +14,19 @@
 
 void	*ft_memchr(const void *s, int c, size_t n)
 {
+	unsigned char	*scp;
+	unsigned char	cc;
 	size_t			i;
-	unsigned char	*u;
-	unsigned char	ch;
 
 	i = 0;
-	u = (unsigned char *)s;
-	ch = (unsigned char)c;
-	while (n--)
+	scp = (unsigned char *)s;
+	cc = (unsigned char)c;
+	if (n <= 0)
+		return (NULL);
+	while (i < n)
 	{
-		if (u[i] == ch)
-			return ((void *)(s + i));
+		if (cc == scp[i])
+			return (&scp[i]);
 		i++;
 	}
 	return (NULL);

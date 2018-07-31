@@ -1,0 +1,9 @@
+# Object files
+libft/*.o
+libft/*.a
+minilibx_macos/*.a
+minilibx_macos/*.o
+obj/*.o
+
+# Executables
+rtv1

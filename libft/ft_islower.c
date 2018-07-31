@@ -3,18 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   ft_islower.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tmervin <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/10/04 16:39:06 by jostraye          #+#    #+#             */
-/*   Updated: 2017/10/04 16:41:09 by jostraye         ###   ########.fr       */
+/*   Created: 2018/04/05 17:17:28 by tmervin           #+#    #+#             */
+/*   Updated: 2018/04/05 18:20:34 by tmervin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-int	ft_islower(int chr)
+int		ft_islower(int c)
 {
-	if (chr > 96 && chr < 123)
+	if (c >= 'a' && c <= 'z')
 		return (1);
 	return (0);
 }

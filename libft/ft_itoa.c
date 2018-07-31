@@ -3,46 +3,53 @@
 /*                                                        :::      ::::::::   */
 /*   ft_itoa.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tmervin <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/09/27 15:37:09 by jostraye          #+#    #+#             */
-/*   Updated: 2017/09/29 16:16:53 by jostraye         ###   ########.fr       */
+/*   Created: 2018/04/03 14:07:37 by tmervin           #+#    #+#             */
+/*   Updated: 2018/04/03 16:00:19 by tmervin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-static size_t	ft_intlength(int n)
+static int		ft_len(int n)
 {
-	size_t i;
+	int l;
 
-	i = 1;
-	while (n /= 10)
-		i++;
-	return (i);
+	l = 1;
+	while (n >= 10)
+	{
+		n /= 10;
+		l++;
+	}
+	return (l);
 }
 
 char			*ft_itoa(int n)
 {
-	char	*d;
-	size_t	i;
-	int		m;
+	int		sign;
+	int		l;
+	char	*res;
 
 	if (n == -2147483648)
 		return (ft_strdup("-2147483648"));
-	m = n;
-	i = ft_intlength(n);
+	sign = 0;
 	if (n < 0)
 	{
-		i++;
-		m = -n;
+		sign = 1;
+		n = -n;
 	}
-	if (!(d = ft_strnew(i)))
-		return (NULL);
-	d[--i] = m % 10 + '0';
-	while (m /= 10)
-		d[--i] = m % 10 + '0';
-	if (n < 0)
-		d[0] = '-';
-	return (d);
+	l = ft_len(n);
+	if (!(res = (char*)malloc(sizeof(char) * (l + sign + 1))))
+		return (0);
+	res[l + sign] = '\0';
+	while (l + sign - 1 >= 0)
+	{
+		res[l + sign - 1] = n % 10 + '0';
+		n /= 10;
+		l--;
+	}
+	if (sign == 1)
+		res[0] = '-';
+	return (res);
 }

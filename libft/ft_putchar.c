@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_putchar.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tmervin <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/09/27 15:37:22 by jostraye          #+#    #+#             */
-/*   Updated: 2017/09/29 16:46:28 by jostraye         ###   ########.fr       */
+/*   Created: 2018/04/03 14:08:16 by tmervin           #+#    #+#             */
+/*   Updated: 2018/04/03 17:30:48 by tmervin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,5 +14,8 @@
 
 void	ft_putchar(char c)
 {
-	write(1, &c, 1);
+	unsigned char cc;
+
+	cc = (unsigned char)c;
+	write(1, &cc, 1);
 }

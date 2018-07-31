@@ -1,0 +1,8 @@
+#NAME		X		Y		Z		RX	RY	RZ	COLOR		LENGTH		SPEC	DIFF	AMB		CUT		REFL
+plane		0		0		-600	0 	0 	1	0xFF5733	200			0.1		0.9		0.8		0		0
+light		00		400		1000		0 	0 	0	0xFFFFFF
+light		4000	800		800		0 	0 	0	0xFFFFFF
+#light		1000	000		100		0 	0 	0	0xFFFFFF
+#sphere	 	1000	300		200		0  	0	0	0x581845	400			1		1		0.2		0		0
+eye			-2100	0		2100	0	40	0
+cone		1000	400		100		0	0	-1	0x0000FF	325			1		1		0.2		0 0

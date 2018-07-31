@@ -1,0 +1,10 @@
+#NAME		X		Y		Z		RX	RY	RZ	COLOR		LENGTH		SPEC	DIFF	AMB CUT REFL  TRANS
+cone 	  	1000	-300	-400		0 2 2	0xffc39a	15			0.8		0.9		0.1 0 0 1
+cylinder 	1000 -300		200		0  -1	1	0xc38bff	120			1		1		0.2 0 0 0
+sphere		800	700		-400		0  0	0	0xa6ffc7	200		0.8		0.9		0.1 0 0 0
+sphere		800	-700	-400		0  0	0	0xb7fffa	200			0.8		0.9		0.1 0 0 0
+plane		  1400	-1		-1		-1 0 0	0xffb8b8	200			0.4		0.9		0.1 0 0 0
+plane		  0		  0		 -600		0 0 1	0xffb8b8	200			0.4		0.9		0.1 0 0 0
+light		 0	1000		400		0 0 0	0xFFFFFF
+light		 -500	-1000	-200		0 0 0	0xFFFFFF
+eye			  400	1700		  0		  0 -0 -80

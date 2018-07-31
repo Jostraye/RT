@@ -3,18 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   ft_isupper.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tmervin <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/10/04 16:39:57 by jostraye          #+#    #+#             */
-/*   Updated: 2017/10/04 16:41:09 by jostraye         ###   ########.fr       */
+/*   Created: 2018/04/05 17:18:57 by tmervin           #+#    #+#             */
+/*   Updated: 2018/04/05 18:20:41 by tmervin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-int	ft_isupper(int chr)
+int		ft_isupper(int c)
 {
-	if (chr > 64 && chr < 91)
+	if (c >= 'A' && c <= 'Z')
 		return (1);
 	return (0);
 }

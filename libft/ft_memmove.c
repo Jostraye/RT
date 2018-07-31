@@ -3,28 +3,30 @@
 /*                                                        :::      ::::::::   */
 /*   ft_memmove.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tmervin <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/09/22 12:04:05 by jostraye          #+#    #+#             */
-/*   Updated: 2017/09/29 16:44:44 by jostraye         ###   ########.fr       */
+/*   Created: 2018/04/03 14:08:07 by tmervin           #+#    #+#             */
+/*   Updated: 2018/04/03 18:02:33 by tmervin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-void	*ft_memmove(void *dst, const void *src, size_t len)
+void	*ft_memmove(void *dest, const void *src, size_t n)
 {
-	char *u;
-	char *v;
+	unsigned char		*destcp;
+	unsigned char		*srccpy;
 
-	v = (char *)src;
-	u = (char *)dst;
-	if (u > v)
-	{
-		while (len--)
-			u[len] = v[len];
-	}
+	destcp = (unsigned char *)dest;
+	srccpy = (unsigned char *)src;
+	if (destcp == srccpy || n <= 0)
+		return (destcp);
+	if (srccpy > destcp)
+		ft_memcpy(destcp, srccpy, n);
 	else
-		ft_memcpy(u, v, len);
-	return (u);
+	{
+		while (n--)
+			destcp[n] = srccpy[n];
+	}
+	return (destcp);
 }

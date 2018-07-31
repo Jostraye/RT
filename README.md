@@ -1,13 +1,7 @@
-# RT
-A project exploring the possibilities of Ray-Tracing for graphics rendering
+# RTv1
 
-To do :
+## Shapes intersections
+http://hugi.scene.org/online/hugi24/coding%20graphics%20chris%20dragan%20raytracing%20shapes.htm
 
-Create shading 
-Create other shapes
-Object placement (in front of, behind)
-Normalized placement
-Lights
-File reader : extracting the information
-Movements and key hooks
-Prepare file (Norm - Error messages - HowTo)
+## Very useful lighting information
+http://web.archive.org/web/20070628033341/http://www.devmaster.net/articles/raytracing_series/part1.php

@@ -3,38 +3,37 @@
 /*                                                        :::      ::::::::   */
 /*   ft_strnstr.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tmervin <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/09/19 15:04:52 by jostraye          #+#    #+#             */
-/*   Updated: 2017/10/02 20:39:55 by jostraye         ###   ########.fr       */
+/*   Created: 2018/04/03 14:11:33 by tmervin           #+#    #+#             */
+/*   Updated: 2018/04/03 14:20:43 by tmervin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-char		*ft_strnstr(const char *big, const char *little, size_t len)
+char	*ft_strnstr(const char *haystack, const char *needle, size_t len)
 {
-	size_t			i;
-	int				find_index;
-	int				remember;
+	size_t		i;
+	size_t		j;
+	int			l;
+	char		*ptr;
 
-	find_index = 0;
+	l = 0;
 	i = 0;
-	if (little[0] == '\0')
-		return ((char*)&big[0]);
-	while (big[i] != '\0' && i < len)
+	ptr = (char *)haystack;
+	while (needle[l] != '\0')
+		l++;
+	if (l == 0)
+		return (ptr);
+	while (ptr[i] != '\0' && i < len)
 	{
-		if (big[i] == little[find_index])
+		j = 0;
+		while (ptr[i + j] == needle[j])
 		{
-			remember = i;
-			while (big[i] == little[find_index] && i < len)
-			{
-				if (little[find_index++ + 1] == '\0')
-					return ((char*)&big[remember]);
-				i++;
-			}
-			find_index = 0;
-			i = remember;
+			j++;
+			if (needle[j] == '\0' && (i + j) <= len)
+				return (&ptr[i]);
 		}
 		i++;
 	}

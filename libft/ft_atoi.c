@@ -3,36 +3,34 @@
 /*                                                        :::      ::::::::   */
 /*   ft_atoi.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tmervin <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/09/19 08:30:53 by jostraye          #+#    #+#             */
-/*   Updated: 2017/10/02 19:05:12 by jostraye         ###   ########.fr       */
+/*   Created: 2018/04/03 14:06:58 by tmervin           #+#    #+#             */
+/*   Updated: 2018/04/05 17:10:31 by tmervin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-int	ft_atoi(const char *str)
+int		ft_atoi(const char *str)
 {
-	int i;
-	int sum;
-	int	bol;
+	int		i;
+	int		rslt;
+	int		sign;
 
-	bol = 1;
-	sum = 0;
 	i = 0;
-	while ((str[i] == '\t') || (str[i] == '\n') || (str[i] == '\v') ||
-	(str[i] == '\f') || (str[i] == ' ') || (str[i] == '\r'))
+	rslt = 0;
+	sign = 1;
+	while (ft_isspace(str[i]))
 		i++;
 	if (str[i] == '-')
-		bol = -1;
-	if (str[i] == '-' || str[i] == '+')
+		sign = -1;
+	if ((str[i] == '+') || (str[i] == '-'))
 		i++;
-	while (str[i] && ft_isdigit(str[i]))
+	while ('0' <= str[i] && str[i] <= '9')
 	{
-		sum *= 10;
-		sum += (int)str[i] - '0';
+		rslt = (rslt * 10) + str[i] - 48;
 		i++;
 	}
-	return (sum * bol);
+	return (sign * rslt);
 }

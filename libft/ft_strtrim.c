@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_strtrim.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jostraye <jostraye@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tmervin <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/09/25 14:02:25 by jostraye          #+#    #+#             */
-/*   Updated: 2017/10/05 22:10:22 by jostraye         ###   ########.fr       */
+/*   Created: 2018/04/03 14:11:51 by tmervin           #+#    #+#             */
+/*   Updated: 2018/04/03 14:24:32 by tmervin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,25 +14,21 @@
 
 char	*ft_strtrim(char const *s)
 {
-	int		start;
-	int		length;
-	char	*d;
+	size_t	start;
+	size_t	end;
 
-	if (s == NULL)
+	if (!s)
 		return (NULL);
-	length = ft_strlen(s);
-	while (ft_istrim(s[length - 1]))
-		length--;
-	start = -1;
-	while (ft_istrim(s[++start]))
-		length--;
-	length = (length <= 0) ? 0 : length;
-	if (!(d = (char*)malloc(sizeof(char) * (length + 1))))
-		return (NULL);
-	s += start;
-	start = -1;
-	while (++start < length)
-		d[start] = *s++;
-	d[start] = '\0';
-	return (d);
+	start = 0;
+	while (s[start] != '\0'
+			&& (s[start] == ' ' || s[start] == '\t' || s[start] == '\n'))
+		start++;
+	end = ft_strlen(s);
+	while (end > start
+			&& (s[end - 1] == ' ' || s[end - 1] == '\t' || s[end - 1] == '\n'))
+		end--;
+	if (start == end)
+		return (ft_strnew(1));
+	else
+		return (ft_strsub(s, start, (end - start)));
 }
